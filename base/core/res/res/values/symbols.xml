@@ -1936,6 +1936,8 @@
   <java-symbol type="integer" name="config_lightSensorWarmupTime" />
   <java-symbol type="integer" name="config_lowBatteryCloseWarningBump" />
   <java-symbol type="integer" name="config_lowBatteryWarningLevel" />
+  <java-symbol type="integer" name="config_batteryLowTemperature" />
+  <java-symbol type="integer" name="config_batteryHighTemperature" />
   <java-symbol type="integer" name="config_networkPolicyDefaultWarning" />
   <java-symbol type="integer" name="config_networkTransitionTimeout" />
   <java-symbol type="integer" name="config_networkNotifySwitchType" />
@@ -1966,6 +1968,7 @@
   <java-symbol type="integer" name="config_screenBrightnessDim" />
   <java-symbol type="integer" name="config_screenBrightnessDoze" />
   <java-symbol type="integer" name="config_shutdownBatteryTemperature" />
+  <java-symbol type="integer" name="config_shutdownBatteryLowTemperature" />
   <java-symbol type="integer" name="config_undockedHdmiRotation" />
   <java-symbol type="integer" name="config_virtualKeyQuietTimeMillis" />
   <java-symbol type="integer" name="config_brightness_ramp_rate_fast" />
