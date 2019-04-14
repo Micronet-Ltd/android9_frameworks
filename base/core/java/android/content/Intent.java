@@ -3033,6 +3033,8 @@ public class Intent implements Parcelable, Cloneable {
     public static final String ACTION_DOCK_EVENT =
             "android.intent.action.DOCK_EVENT";
 
+    @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
+    public static final String ACTION_VINPUTS_CHANGED = "android.intent.action.VINPUTS_CHANGED";
     /**
      * Broadcast Action: A broadcast when idle maintenance can be started.
      * This means that the user is not interacting with the device and is
