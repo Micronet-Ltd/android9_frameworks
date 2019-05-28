@@ -291,6 +291,7 @@ import com.android.server.wm.DisplayFrames;
 import com.android.server.wm.WindowManagerInternal;
 import com.android.server.wm.WindowManagerInternal.AppTransitionListener;
 import com.android.server.lights.LightsManager;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -464,7 +465,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             mLight = LocalServices.getService(LightsManager.class).getLight(LightsManager.LIGHT_ID_BUTTONS);
         }
         if(!isButtonLightInited){
-            mButtonLightTimeout =4000;
+            mButtonLightTimeout =2000;
             mButtonBrightness = 255;
             isButtonLightInited = true;
         }
@@ -1490,17 +1491,17 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     }
                 }
                 /*add by xxf for 9.0  button light can not*/
-                if(mIsSupportLightButton){
+               /* if(mIsSupportLightButton){
                     setButtonLightEnabled(false);
-                }
+                }*/
                 /*add by xxf for 9.0  button light can not*/
             } else {
                 wakeUpFromPowerKey(event.getDownTime());
                 
                 /*add by xxf for 9.0  button light can not*/
-                if(mIsSupportLightButton){
+           /*     if(mIsSupportLightButton){
                     setButtonLightEnabled(true);
-                }
+                }*/
                 /*add by xxf for 9.0  button light can not*/
 
                 if (mSupportLongPressPowerWhenNonInteractive && hasLongPressOnPowerBehavior()) {
@@ -3844,9 +3845,13 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         // it handle it, because that gives us the correct 5 second
         // timeout.
         if (keyCode == KeyEvent.KEYCODE_HOME) {
-
             // If we have released the home key, and didn't do anything else
             // while it was pressed, then it is time to go home!
+        	if(isTestKey()){
+        		Intent intent = new Intent("cit.home.test");
+                mContext.sendBroadcast(intent);
+        		return -1;
+        	}
             if (!down) {
                 cancelPreloadRecentApps();
 
@@ -3950,6 +3955,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             }
             return 0;
         } else if (keyCode == KeyEvent.KEYCODE_APP_SWITCH) {
+        	if(isTestKey()){
+        		Intent intent = new Intent("cit.menu.test");
+                mContext.sendBroadcast(intent);
+        		return -1;
+        	}
             if (!keyguardOn) {
                 if (down && repeatCount == 0) {
                     preloadRecentApps();
@@ -6235,7 +6245,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         // Basic policy based on interactive state.
         int result;
         /*add by xxf for 9.0  button light can not*/
-        boolean isShouldLightButton = true;
+        //boolean isShouldLightButton = true;
         /*add by xxf for 9.0  button light can not*/
         boolean isWakeKey = (policyFlags & WindowManagerPolicy.FLAG_WAKE) != 0
                 || event.isWakeKey();
@@ -6457,7 +6467,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     interceptPowerKeyUp(event, interactive, canceled);
                 }
                 /*add by xxf for 9.0  button light can not*/
-                isShouldLightButton = false;
+                //isShouldLightButton = false;
                 /*add by xxf for 9.0  button light can not*/
                 break;
             }
@@ -6603,12 +6613,33 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
         
         /*add by xxf for 9.0  button light can not*/
-        if(mIsSupportLightButton && isShouldLightButton && down && interactive){
+        if(mIsSupportLightButton && isShouldLightButton(keyCode) && down && interactive){
             setButtonLightEnabled(true);
         }
         /*add by xxf for 9.0  button light can not*/
         return result;
     }
+    /*add by xxf for 9.0  button light can not*/
+    private boolean isShouldLightButton(int keyCode){
+    	boolean isShouldLight =false;
+    	switch (keyCode) {
+		case KeyEvent.KEYCODE_HOME:
+		case KeyEvent.KEYCODE_BACK:
+		case KeyEvent.KEYCODE_MENU:
+			isShouldLight =true;
+			break;
+		default:
+			break;
+		}
+    	return isShouldLight;
+    }
+    private boolean isAtCit(){
+    	return SystemProperties.getBoolean("persist.sys.at.cit", false);
+    }
+    private boolean isTestKey(){
+    	return SystemProperties.getBoolean("sys.cit_keytest", false);
+    }
+    /*add by xxf for 9.0  button light can not*/
 
     /**
      * Handle statusbar expansion events.

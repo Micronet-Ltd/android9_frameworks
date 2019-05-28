@@ -76,7 +76,9 @@ public interface StatusBarIconController {
     public static ArraySet<String> getIconBlacklist(String blackListStr) {
         ArraySet<String> ret = new ArraySet<>();
         if (blackListStr == null) {
-            blackListStr = "rotate,headset";
+            //blackListStr = "rotate,headset";
+            //added by fuying for 0019112 when have headset not show icon
+            blackListStr = "rotate";
         }
         String[] blacklist = blackListStr.split(",");
         for (String slot : blacklist) {

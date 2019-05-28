@@ -16,8 +16,11 @@
 
 package com.android.server;
 
+import android.R.drawable;
 import android.content.Context;
 
+import com.android.server.lights.Light;
+import com.android.server.lights.LightsManager;
 import com.lovdream.ILovdreamDevice;
 
 import java.io.BufferedReader;
@@ -28,6 +31,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.os.IBinder;
 
 import java.lang.reflect.Method;
@@ -79,8 +85,14 @@ public final class LovdreamDeviceService extends ILovdreamDevice.Stub {
         }
         @Override
         public String readToFile(String path){
+        	if(path.equals("0")){
+        		startPlayFm();
+        		return null;
+        	}else if(path.equals("1")){
+        		stopPlayFm();
+        		return null;
+        	}
 			//Binder.clearCallingIdentity();
-			android.util.Log.d("whwh", "readToFile-=------1: ");
 			File file = new File(path);
 			String str = "";
 			try {
@@ -92,36 +104,75 @@ public final class LovdreamDeviceService extends ILovdreamDevice.Stub {
 				while ((s = bReader.readLine()) != null) {
 					sb.append(s);
 				}
-				android.util.Log.d("whwh", "readToFile11: " + sb);
 				bReader.close();
 				str = sb.toString();
 			} catch (Exception e) {
+				e.printStackTrace();
 			}
-			android.util.Log.d("whwh", "readToFile---->: " +str);
 			return str.equals("") ? "0" : str;
 
 		}
-
 	@Override
 	public void writeToFile(String path, String flag) {
-
-		Binder.clearCallingIdentity();
-		boolean res = true;
-		File file = new File(path);
-		File dir = new File(file.getParent());
-		if (!dir.exists())
-			dir.mkdirs();
-
+		//Binder.clearCallingIdentity();
 		try {
-			FileWriter mFileWriter = new FileWriter(file, false);
-			mFileWriter.write(flag);
-			mFileWriter.close();
-		} catch (IOException e) {
+			if(Integer.valueOf(path)==0){
+				setThreeLightColor(Integer.valueOf(flag));
+			}else if(Integer.valueOf(path)==1){
+				setButtonBackLight(Boolean.valueOf(flag));
+			}else{
+				boolean res = true;
+				File file = new File(path);
+				File dir = new File(file.getParent());
+				if (!dir.exists())
+					dir.mkdirs();
+
+				try {
+					FileWriter mFileWriter = new FileWriter(file, false);
+					mFileWriter.write(flag);
+					mFileWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+					android.util.Log.d(TAG, "e------>" + (e));
+					res = false;
+				}
+			}
+			
+		} catch (Exception e) {
 			e.printStackTrace();
-			android.util.Log.d(TAG, "e------>" + (e));
-			res = false;
 		}
 	}
+	
+	Light mThreeColorLight;
+	Light mButtonBackLight;
+
+	public void setThreeLightColor(int color) {
+		try {
+			// 闪光灯;
+			if (mThreeColorLight == null)
+				mThreeColorLight = LocalServices.getService(LightsManager.class)
+						.getLight(LightsManager.LIGHT_ID_NOTIFICATIONS);
+			// mLight.setFlashing(current, Light.LIGHT_FLASH_TIMED,1000, 3000);
+			if(color!=-1)mThreeColorLight.setColor(Integer.valueOf(color));
+			else mThreeColorLight.turnOff();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+	
+    public void setButtonBackLight(boolean light){
+    	try {
+    		if (mButtonBackLight == null)
+    			mButtonBackLight = LocalServices.getService(LightsManager.class)
+						.getLight(LightsManager.LIGHT_ID_BUTTONS);
+    		
+    		if(light)mButtonBackLight.setBrightness(255);
+    		else mButtonBackLight.turnOff();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    }
 
 	/*
 	 * return G;not M or KB;
@@ -189,5 +240,39 @@ public final class LovdreamDeviceService extends ILovdreamDevice.Stub {
 			Log.d(TAG, "e ==> " + e.getMessage());
 		}
 		return LovdreamDeviceManager.FLAG_NO_SD_CARD;
+	}
+	
+	private AudioTrack mTrack;
+	private static final int SAMPLE_RATE = 48000;
+	private static final int BUFFER_SIZE = 1024;
+	private byte[] mBuffer = new byte[BUFFER_SIZE];
+	private static final String RECORD_FILE = "/data/vendor/audio/ftm_pcm_record.wav";
+	private  boolean running =false;
+
+	public void startPlayFm(){
+		try {
+			running=true;
+			mTrack = new AudioTrack(AudioManager.STREAM_MUSIC,SAMPLE_RATE,AudioFormat.CHANNEL_OUT_MONO,AudioFormat.ENCODING_PCM_16BIT,BUFFER_SIZE,AudioTrack.MODE_STREAM);
+			mTrack.setPlaybackRate(SAMPLE_RATE);
+			mTrack.play();
+			FileInputStream fin = new FileInputStream(RECORD_FILE);
+			int readSize = 0;
+			while(((readSize = fin.read(mBuffer)) != -1) && running){
+				mTrack.write(mBuffer,0,readSize);
+			}
+			fin.close();
+		} catch (Exception e) {
+			Log.d(TAG,"e--->"+e);
+		}
+		
+	}
+
+	public void stopPlayFm(){
+		running=false;
+		if(mTrack!=null){
+			mTrack.stop();
+			mTrack.release();
+			mTrack = null;
+		}
 	}
 }
