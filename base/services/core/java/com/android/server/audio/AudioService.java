@@ -749,7 +749,7 @@ public class AudioService extends IAudioService.Stub
                         MAX_STREAM_VOLUME[AudioSystem.STREAM_MUSIC] / 4;
             } else {
                 AudioSystem.DEFAULT_STREAM_VOLUME[AudioSystem.STREAM_MUSIC] =
-                        MAX_STREAM_VOLUME[AudioSystem.STREAM_MUSIC] / 3;
+                        (int)(MAX_STREAM_VOLUME[AudioSystem.STREAM_MUSIC] * 0.7);
             }
         }
 
