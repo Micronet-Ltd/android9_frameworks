@@ -393,10 +393,9 @@ public final class NfcActivityManager extends IAppCallback.Stub
                                     "either scheme file or scheme content");
                             continue;
                         }
-                        uri = ContentProvider.maybeAddUserId(uri, activity.getUserId());
+                        uri = ContentProvider.maybeAddUserId(uri, UserHandle.myUserId());
                         validUris.add(uri);
                     }
-
                     uris = validUris.toArray(new Uri[validUris.size()]);
                 }
             }
@@ -410,7 +409,7 @@ public final class NfcActivityManager extends IAppCallback.Stub
         } finally {
             Binder.restoreCallingIdentity(ident);
         }
-        return new BeamShareData(message, uris, activity.getUser(), flags);
+        return new BeamShareData(message, uris, new UserHandle(UserHandle.myUserId()), flags);
     }
 
     /** Callback from NFC service, usually on binder thread */
