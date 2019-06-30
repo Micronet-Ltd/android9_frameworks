@@ -568,9 +568,7 @@ int can_config_and_open(bool listeningModeEnable, int bitrate, int termination, 
     /**
      * Configuring Filter List
      */
-    if(numfilter > 0){
         setFilterAndMasks(filter_array, numfilter,fd);
-    }
 
     /**
      * The firmware has a 25ms delay between configuring filters and flow control codes
@@ -811,7 +809,7 @@ void setFilterAndMasks(FLEXCAN_filter_mask *filter_array, int numfilter, int por
                 sprintf ((char*)filterIdString, "%03x", filterId);
             }
 
-            if(filterSetCount < tmp_filter.filter_count && filterSetCount <= 24){
+            if(filterSetCount < tmp_filter.filter_count || filterSetCount <= 24){
                 setFilters(filterIdString, filterMaskTypeChar,port_fd);
                 usleep(5000);
                 filterSetCount++;
