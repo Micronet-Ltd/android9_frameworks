@@ -188,6 +188,7 @@ final class DockObserver extends SystemService {
             Intent intent = new Intent(Intent.ACTION_DOCK_EVENT);
             intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
             intent.putExtra(Intent.EXTRA_DOCK_STATE, convertDockState(mReportedDockState));
+            intent.putExtra("DockValue", mReportedDockState);
 
             boolean dockSoundsEnabled = Settings.Global.getInt(cr,
                     Settings.Global.DOCK_SOUNDS_ENABLED, 1) == 1;
