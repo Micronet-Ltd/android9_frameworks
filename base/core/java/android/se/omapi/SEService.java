@@ -19,6 +19,25 @@
 /*
  * Contributed by: Giesecke & Devrient GmbH.
  */
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright 2018 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 package android.se.omapi;
 
@@ -59,6 +78,14 @@ public final class SEService {
      * @hide
      */
     public static final int NO_SUCH_ELEMENT_ERROR = 2;
+
+    /**
+     * Error code used with ServiceSpecificException.
+     * Thrown if RF is observed ON while opening connection to ESE over SPI.
+     *
+     * @hide
+     */
+    public static final int NFC_IN_USE = 3;
 
     /**
      * Interface to send call-backs to the application when the service is connected.

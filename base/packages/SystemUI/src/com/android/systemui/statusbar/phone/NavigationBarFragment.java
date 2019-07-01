@@ -115,6 +115,7 @@ public class NavigationBarFragment extends Fragment implements Callbacks {
     private static final boolean DEBUG_ROTATION = true;
     private static final String EXTRA_DISABLE_STATE = "disabled_state";
     private static final String EXTRA_DISABLE2_STATE = "disabled2_state";
+    private Context mContext;
 
     private final static int BUTTON_FADE_IN_OUT_DURATION_MS = 100;
     private final static int NAVBAR_HIDDEN_PENDING_ICON_TIMEOUT_MS = 20000;
@@ -200,6 +201,7 @@ public class NavigationBarFragment extends Fragment implements Callbacks {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mContext =getActivity();
         mCommandQueue = SysUiServiceProvider.getComponent(getContext(), CommandQueue.class);
         mCommandQueue.addCallbacks(this);
         mStatusBar = SysUiServiceProvider.getComponent(getContext(), StatusBar.class);
@@ -835,7 +837,12 @@ public class NavigationBarFragment extends Fragment implements Callbacks {
     private boolean onRecentsTouch(View v, MotionEvent event) {
         int action = event.getAction() & MotionEvent.ACTION_MASK;
         if (action == MotionEvent.ACTION_DOWN) {
-            mCommandQueue.preloadRecentApps();
+        	//add by xxf
+        	boolean isCit = android.os.SystemProperties.getBoolean("sys.cit_keytest", false);
+        	if(!isCit){
+        		mCommandQueue.preloadRecentApps();
+        	}
+        	//add by xxf
         } else if (action == MotionEvent.ACTION_CANCEL) {
             mCommandQueue.cancelPreloadRecentApps();
         } else if (action == MotionEvent.ACTION_UP) {
@@ -847,12 +854,21 @@ public class NavigationBarFragment extends Fragment implements Callbacks {
     }
 
     private void onRecentsClick(View v) {
-        if (LatencyTracker.isEnabled(getContext())) {
-            LatencyTracker.getInstance(getContext()).onActionStart(
-                    LatencyTracker.ACTION_TOGGLE_RECENTS);
-        }
-        mStatusBar.awakenDreams();
-        mCommandQueue.toggleRecentApps();
+    	//add by xxf
+    	boolean isCit = android.os.SystemProperties.getBoolean("sys.cit_keytest", false);
+    	if(!isCit){
+    		 if (LatencyTracker.isEnabled(getContext())) {
+    	            LatencyTracker.getInstance(getContext()).onActionStart(
+    	                    LatencyTracker.ACTION_TOGGLE_RECENTS);
+    	        }
+    	        mStatusBar.awakenDreams();
+    	        mCommandQueue.toggleRecentApps();
+    	}else{
+    		Intent intent = new Intent();
+    		intent.setAction("cit_test_recent");
+    		if(mContext!=null)mContext.sendBroadcast(intent);
+    	}
+    	//add by xxf
     }
 
     private boolean onLongPressBackHome(View v) {

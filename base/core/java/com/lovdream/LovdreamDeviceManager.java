@@ -18,10 +18,13 @@ package com.lovdream;
 
 
 import android.content.Context;
+
 import com.lovdream.ILovdreamDevice;
+
 import android.os.ServiceManager;
 import android.annotation.SystemService;
 import android.os.IBinder;
+import android.util.Log;
 
 /**
  * AudioManager provides access to volume and ringer mode control.
@@ -40,7 +43,7 @@ public class LovdreamDeviceManager {
 		public static final int FLAG_READ_INTERNAL_AVAILABLE =3;
 		//add by xxf for getMemorySize;
 
-    private static ILovdreamDevice sService;
+       private static ILovdreamDevice sService;
 	   private static  LovdreamDeviceManager instance=null;
 	    public static LovdreamDeviceManager getInstance(Context context){
 	            synchronized(LovdreamDeviceManager.class){
@@ -70,6 +73,26 @@ public class LovdreamDeviceManager {
     	try {
     		mService.writeToFile(path,flag);
 		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    }
+    
+    public void setButtonBackLight(boolean light){
+    	ILovdreamDevice mService = getService();
+    	try {
+    		mService.setButtonBackLight(light);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    }
+    
+    
+    public  void setThreeLightColor(int color){
+    	ILovdreamDevice mService = getService();
+    	try {
+    		mService.setThreeLightColor(color);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
     }
     
@@ -79,6 +102,23 @@ public class LovdreamDeviceManager {
             mService.runProcess(cmds);
         } catch (Exception e) {}
     }
+    
+    
+    public void startPlayFm(){
+        ILovdreamDevice mService = getService();
+        try {
+            mService.startPlayFm();
+        } catch (Exception e) {}
+    }
+    
+    
+    public void stopPlayFm(){
+        ILovdreamDevice mService = getService();
+        try {
+            mService.stopPlayFm();
+        } catch (Exception e) {}
+    }
+    
     public long getMemorySize(int flag) {
     	ILovdreamDevice mService = getService();
     	try {

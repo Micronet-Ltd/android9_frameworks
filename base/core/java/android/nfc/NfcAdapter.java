@@ -147,6 +147,12 @@ public final class NfcAdapter {
     public static final String ACTION_TAG_DISCOVERED = "android.nfc.action.TAG_DISCOVERED";
 
     /**
+     * Broadcast to only the activity that handles ACTION_TAG_DISCOVERED
+     * @hide
+     */
+    public static final String ACTION_TAG_LEFT_FIELD = "android.nfc.action.TAG_LOST";
+
+    /**
      * Broadcast Action: Intent to notify an application that an transaction event has occurred
      * on the Secure Element.
      *
@@ -158,12 +164,6 @@ public final class NfcAdapter {
     @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
     public static final String ACTION_TRANSACTION_DETECTED =
             "android.nfc.action.TRANSACTION_DETECTED";
-
-    /**
-     * Broadcast to only the activity that handles ACTION_TAG_DISCOVERED
-     * @hide
-     */
-    public static final String ACTION_TAG_LEFT_FIELD = "android.nfc.action.TAG_LOST";
 
     /**
      * Mandatory extra containing the {@link Tag} that was discovered for the
@@ -225,7 +225,7 @@ public final class NfcAdapter {
      * Indicates the Secure Element on which the transaction occurred.
      * eSE1...eSEn for Embedded Secure Elements, SIM1...SIMn for UICC, etc.
      */
-    public static final String EXTRA_SECURE_ELEMENT_NAME = "android.nfc.extra.SECURE_ELEMENT_NAME";
+    public static final String EXTRA_SECURE_ELEMENT_NAME  = "android.nfc.extra.SECURE_ELEMENT_NAME";
 
     public static final int STATE_OFF = 1;
     public static final int STATE_TURNING_ON = 2;

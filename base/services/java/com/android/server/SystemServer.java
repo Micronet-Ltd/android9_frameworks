@@ -52,6 +52,7 @@ import android.os.UserHandle;
 import android.os.storage.IStorageManager;
 import android.util.DisplayMetrics;
 import android.util.EventLog;
+import android.util.Log;
 import android.util.Slog;
 import android.util.TimingsTraceLog;
 import android.view.WindowManager;
@@ -128,9 +129,9 @@ import com.android.server.wm.WindowManagerService;
 
 import dalvik.system.VMRuntime;
 import dalvik.system.PathClassLoader;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
@@ -750,6 +751,9 @@ public final class SystemServer {
      */
     private void startOtherServices() {
         final Context context = mSystemContext;
+        //add by xxf ;add mmi sevices for mmi start
+        LovdreamDeviceService mLovdreamDeviceService =null;
+        //add by xxf ;add mmi sevices for mmi end
         VibratorService vibrator = null;
         IStorageManager storageManager = null;
         NetworkManagementService networkManagement = null;
@@ -813,6 +817,21 @@ public final class SystemServer {
             ServiceManager.addService("sec_key_att_app_id_provider",
                     new KeyAttestationApplicationIdProviderService(context));
             traceEnd();
+            
+            
+            //add by xxf ;add mmi sevices for mmi start
+    	    if (true) {
+                    traceBeginAndSlog("StartLovedreamWriteService");
+                    try {
+                    	mLovdreamDeviceService =  LovdreamDeviceService.getInstance(context);
+                        ServiceManager.addService(Context.LOVDREAMDEVICES_SERVICE, mLovdreamDeviceService);
+                        Log.d("xxfppp", "add mLovdreamDeviceService---->");
+                    } catch (Throwable e) {
+                        reportWtf("starting LovedreamWriteService Service", e);
+                    }
+                    traceEnd();
+                }
+    	  //add by xxf ;add mmi sevices for mmi end
 
             traceBeginAndSlog("StartKeyChainSystemService");
             mSystemServiceManager.startService(KeyChainSystemService.class);

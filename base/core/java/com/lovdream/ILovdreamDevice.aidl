@@ -12,4 +12,12 @@ interface ILovdreamDevice{
 	*                            
 	*/
 	long getMemorySize(int flag);
+	
+	void setThreeLightColor(int color);
+	
+	void setButtonBackLight(boolean light);
+	
+	
+	void startPlayFm();
+	void stopPlayFm();
 }

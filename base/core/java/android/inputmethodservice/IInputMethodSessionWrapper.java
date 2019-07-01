@@ -16,8 +16,6 @@
 
 package android.inputmethodservice;
 
-import com.android.internal.view.IInputMethodSession;
-import com.android.server.vinputs.InputOutputService;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Bundle;
@@ -38,6 +36,8 @@ import android.view.inputmethod.InputMethodSession;
 import android.content.Intent;
 import com.android.internal.os.HandlerCaller;
 import com.android.internal.os.SomeArgs;
+import com.android.internal.view.IInputMethodSession;
+import com.android.server.vinputs.InputOutputService;
 
 class VinputsNotifier{
     private static final String TAG = "VinputsNotifier";
