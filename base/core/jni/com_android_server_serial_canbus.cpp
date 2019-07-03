@@ -41,9 +41,6 @@
 #define MAX_FlexCAN_Flowcontrol_CAN 8
 #define MAX_MASK_FILTER_SIZE 11
 
-jobject mFileDescriptor1;
-jobject mFileDescriptor2;
-
 static int CAN1_TTY_NUMBER= 1;
 static int CAN2_TTY_NUMBER= 2;
 
@@ -900,7 +897,7 @@ int readStatusCommand(JNIEnv* *env, jobject instance, jint fd){
  * 4. Create a new interface based on the port number
  * 5. Set the right variables - file descriptors
  * */
-jobject configureCanAndOpen(JNIEnv *env, jobject instance, jboolean listeningModeEnable, jint bitrate, jboolean termination,jobjectArray  hardwarefilter, jint port_number,jobjectArray flowControl){
+int configureCanAndOpen(JNIEnv *env, jobject instance, jboolean listeningModeEnable, jint bitrate, jboolean termination,jobjectArray  hardwarefilter, jint port_number,jobjectArray flowControl){
     // /Initialisation
     static char *port=NULL;
     //int ttyport_number=0;
@@ -1053,15 +1050,8 @@ jobject configureCanAndOpen(JNIEnv *env, jobject instance, jboolean listeningMod
         //fd_id = env->GetFieldID(clazz, "fdCanPort1", "I");
        // env->SetIntField(instance, fd_id, fdCanPort1);
         if (fdCanPort1 < 0){
-          return NULL;
+          return SYSTEM_ERROR;
         }
-        jclass cFileDescriptor = env->FindClass("java/io/FileDescriptor");
-        jmethodID iFileDescriptor = env->GetMethodID(cFileDescriptor, "<init>", "()V");
-        jfieldID descriptorID1 = env->GetFieldID(cFileDescriptor, "descriptor", "I");
-        mFileDescriptor1 = env->NewObject(cFileDescriptor, iFileDescriptor);
-        env->SetIntField(mFileDescriptor1, descriptorID1, (jint) fdCanPort1);
-        return mFileDescriptor1;
-        
     }
     else if (port_number==2){
         jint fdCanPort2 = can_config_and_open(listeningModeEnable, bitrate, termination, filter_array, numfilter, port, flowControlMessageArray, numFlowControlMessages);
@@ -1069,18 +1059,12 @@ jobject configureCanAndOpen(JNIEnv *env, jobject instance, jboolean listeningMod
         //fd_id = env->GetFieldID(clazz, "fdCanPort2", "I");
         //env->SetIntField(instance, fd_id, fdCanPort2);
         if (fdCanPort2 < 0){
-          return NULL;
+          return SYSTEM_ERROR;
         }
-        jclass cFileDescriptor = env->FindClass("java/io/FileDescriptor");
-        jmethodID iFileDescriptor = env->GetMethodID(cFileDescriptor, "<init>", "()V");
-        jfieldID descriptorID2 = env->GetFieldID(cFileDescriptor, "descriptor", "I");
-        mFileDescriptor2 = env->NewObject(cFileDescriptor, iFileDescriptor);
-        env->SetIntField(mFileDescriptor2, descriptorID2, (jint) fdCanPort2);
-        return mFileDescriptor2;
     }
 
 
-    return NULL;
+    return 0;
 }
 
 int sendFrameToCan(JNIEnv *env, jobject obj, jobject canbusFrameObj, jint canNumber) {
@@ -1112,7 +1096,7 @@ static const char *classPathName = "com/android/server/serial/CanbusService";
 static const JNINativeMethod methods[] = {
 {"close_native",                         "(I)I",                                     (int*)close_native },
 {"sendFrameToCan",                         "(Lcom/android/server/serial/CanbusFrame;I)I",                                     (int*)sendFrameToCan },
-{"configureCanAndOpen",                         "(ZIZ[Lcom/android/server/serial/CanbusHardwareFilter;I[Lcom/android/server/serial/CanbusFlowControl;)Ljava/io/FileDescriptor;",                                     (int*)configureCanAndOpen },
+{"configureCanAndOpen",                         "(ZIZ[Lcom/android/server/serial/CanbusHardwareFilter;I[Lcom/android/server/serial/CanbusFlowControl;)I",                                     (int*)configureCanAndOpen },
 };
 
 int registerFuncsCanbus (JNIEnv *_env){
