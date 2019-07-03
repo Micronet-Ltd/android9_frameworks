@@ -6,6 +6,12 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class CanbusService{
 
@@ -14,6 +20,10 @@ public class CanbusService{
     final private String can2 = "/dev/ttyCAN1";
     String command = "";
     String response = "";
+    private FileDescriptor mFd;
+    private FileInputStream mFileInputStream;
+    private FileOutputStream mFileOutputStream;
+    
     /**
     * Configure canbus and open
     *
@@ -35,8 +45,11 @@ public class CanbusService{
     *        @param responseDataBytes The firmware responds with these data bytes with its respective response ID. (byte[])
     *
     */
-    public int configureAndOpenCan(boolean listeningModeEnable, int bitrate, boolean termination, CanbusHardwareFilter[] hardwareFilters, int portNumber, CanbusFlowControl[] flowControl){
-        return configureCanAndOpen(listeningModeEnable, bitrate, termination, hardwareFilters, portNumber, flowControl);
+    public FileDescriptor configureAndOpenCan(boolean listeningModeEnable, int bitrate, boolean termination, CanbusHardwareFilter[] hardwareFilters, int portNumber, CanbusFlowControl[] flowControl){
+        mFd = configureCanAndOpen(listeningModeEnable, bitrate, termination, hardwareFilters, portNumber, flowControl);
+        mFileInputStream = new FileInputStream(mFd);
+        mFileOutputStream = new FileOutputStream(mFd);
+        return mFd;
     }
     
     /**
@@ -139,7 +152,16 @@ public class CanbusService{
         else return "f";
 	}
 	
-	static native int configureCanAndOpen(boolean listeningModeEnable, int bitrate, boolean termination, CanbusHardwareFilter[] hardwareFilters, int portNumber, CanbusFlowControl[] flowControl);
+	    // Getters and setters
+    public InputStream getInputStream() {
+        return mFileInputStream;
+    }
+
+    public OutputStream getOutputStream() {
+        return mFileOutputStream;
+    }
+	
+	static native FileDescriptor configureCanAndOpen(boolean listeningModeEnable, int bitrate, boolean termination, CanbusHardwareFilter[] hardwareFilters, int portNumber, CanbusFlowControl[] flowControl);
 	
 	static native int close_native(int portNumber);
 	
