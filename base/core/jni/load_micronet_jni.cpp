@@ -20,6 +20,7 @@
 #include <nativehelper/JNIHelp.h>
 #include "android_runtime/AndroidRuntime.h"
 #include "com_android_server_lights_Light.h"
+#include "com_android_server_serial_canbus.h"
 //#include "com_android_server_vinputs_Vinputs.h"
 //#include "load_micronet_jni.h"
 
@@ -49,6 +50,11 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 
     if (registerFuncsLight(env) < 0) {
         ALOGE("ERROR: registerFuncsLight native registration failed\n");
+        goto bail;
+    }
+    
+    if (registerFuncsCanbus(env) < 0) {
+        ALOGE("ERROR: registerFuncsCanbus native registration failed\n");
         goto bail;
     }
 
