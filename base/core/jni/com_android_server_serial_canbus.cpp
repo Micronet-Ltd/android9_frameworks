@@ -881,8 +881,8 @@ void configureFlowControl( struct FLEXCAN_Flow_Control *configuration_array, int
 }
 
 // JNI functions
-int close_native(JNIEnv* *env, jobject instance, jint close_fd){
-    return closeCAN(close_fd);
+int close_native(JNIEnv* *env, jobject instance, jint port){
+    return closeCAN(getFd(port));
 }
 
 int readStatusCommand(JNIEnv* *env, jobject instance, jint fd){
