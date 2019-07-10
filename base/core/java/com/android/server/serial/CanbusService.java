@@ -14,6 +14,7 @@ public class CanbusService{
     final private String can2 = "/dev/ttyCAN1";
     String command = "";
     String response = "";
+    
     /**
     * Configure canbus and open
     *
@@ -138,7 +139,7 @@ public class CanbusService{
         } 
         else return "f";
 	}
-	
+
 	static native int configureCanAndOpen(boolean listeningModeEnable, int bitrate, boolean termination, CanbusHardwareFilter[] hardwareFilters, int portNumber, CanbusFlowControl[] flowControl);
 	
 	static native int close_native(int portNumber);
