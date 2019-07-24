@@ -20,4 +20,7 @@ interface ILovdreamDevice{
 	
 	void startPlayFm();
 	void stopPlayFm();
+	
+	void setSystemProp(String prop,String value);
+	String getSystemProp(String prop);
 }

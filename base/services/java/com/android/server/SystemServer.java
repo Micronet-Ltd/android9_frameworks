@@ -324,7 +324,12 @@ public final class SystemServer {
                 Slog.w(TAG, "System clock is before 1970; setting to 1970.");
                 SystemClock.setCurrentTimeMillis(EARLIEST_SUPPORTED_TIME);
             }
-
+            
+            try {
+            	SystemProperties.set("persist.sys.lov.broad", String.valueOf(1));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
             //
             // Default the timezone property to GMT if not set.
             //
@@ -787,6 +792,9 @@ public final class SystemServer {
         boolean isWatch = context.getPackageManager().hasSystemFeature(
                 PackageManager.FEATURE_WATCH);
 
+        boolean enableVrService = context.getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_VR_MODE_HIGH_PERFORMANCE);
+
         // For debugging RescueParty
         if (Build.IS_DEBUGGABLE && SystemProperties.getBoolean("debug.crash_system", false)) {
             throw new RuntimeException();
@@ -935,7 +943,7 @@ public final class SystemServer {
                 traceLog.traceEnd();
             }, START_HIDL_SERVICES);
 
-            if (!isWatch) {
+            if (!isWatch && enableVrService) {
                 traceBeginAndSlog("StartVrManagerService");
                 mSystemServiceManager.startService(VrManagerService.class);
                 traceEnd();

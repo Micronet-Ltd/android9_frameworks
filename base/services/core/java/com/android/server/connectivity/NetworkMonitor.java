@@ -866,7 +866,9 @@ public class NetworkMonitor extends StateMachine {
 
     public boolean getIsCaptivePortalCheckEnabled() {
         String symbol = Settings.Global.CAPTIVE_PORTAL_MODE;
+        //fix wifi connected systemUI icon by fy start
         int defaultValue = Settings.Global.CAPTIVE_PORTAL_MODE_IGNORE;
+        //fix wifi connected systemUI icon by fy end
         int mode = mSettings.getSetting(mContext, symbol, defaultValue);
         return mode != Settings.Global.CAPTIVE_PORTAL_MODE_IGNORE;
     }
@@ -1081,6 +1083,7 @@ public class NetworkMonitor extends StateMachine {
             urlConnection.setConnectTimeout(SOCKET_TIMEOUT_MS);
             urlConnection.setReadTimeout(SOCKET_TIMEOUT_MS);
             urlConnection.setUseCaches(false);
+            urlConnection.setRequestProperty("Connection", "close");
             if (mCaptivePortalUserAgent != null) {
                 urlConnection.setRequestProperty("User-Agent", mCaptivePortalUserAgent);
             }
