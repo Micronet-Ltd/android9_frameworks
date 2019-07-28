@@ -309,7 +309,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     static final String TAG = "WindowManager";
     static final boolean DEBUG = false;
     static final boolean localLOGV = false;
-    static final boolean DEBUG_INPUT = true;
+    static final boolean DEBUG_INPUT = false;
     static final boolean DEBUG_KEYGUARD = false;
     static final boolean DEBUG_LAYOUT = false;
     static final boolean DEBUG_SPLASH_SCREEN = false;
@@ -357,6 +357,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
     static final int DOUBLE_TAP_HOME_NOTHING = 0;
     static final int DOUBLE_TAP_HOME_RECENT_SYSTEM_UI = 1;
+
+    static final int SHORT_PRESS_MENU_NOTHING = 0;
+    static final int SHORT_PRESS_MENU_APP_SWITCH = 1;
 
     static final int SHORT_PRESS_WINDOW_NOTHING = 0;
     static final int SHORT_PRESS_WINDOW_PICTURE_IN_PICTURE = 1;
@@ -816,6 +819,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     // What we do when the user double-taps on home
     private int mDoubleTapOnHomeBehavior;
 
+      // What we do when the user long presses on home
+    private int mShortPressOnMenuBehavior;
+    
     // Allowed theater mode wake actions
     private boolean mAllowTheaterModeWakeFromKey;
     private boolean mAllowTheaterModeWakeFromPowerKey;
@@ -2486,6 +2492,13 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 mLongPressOnHomeBehavior > LAST_LONG_PRESS_HOME_BEHAVIOR) {
             mLongPressOnHomeBehavior = LONG_PRESS_HOME_NOTHING;
         }
+        
+        mShortPressOnMenuBehavior = res.getInteger(
+                com.android.internal.R.integer.config_shortPressOnMenuBehavior);
+        if (mShortPressOnMenuBehavior < SHORT_PRESS_MENU_NOTHING ||
+                mShortPressOnMenuBehavior > SHORT_PRESS_MENU_APP_SWITCH) {
+            mShortPressOnMenuBehavior = SHORT_PRESS_MENU_NOTHING;
+        }
 
         mDoubleTapOnHomeBehavior = res.getInteger(
                 com.android.internal.R.integer.config_doubleTapOnHomeBehavior);
@@ -2548,19 +2561,16 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         // Allow the navigation bar to move on non-square small devices (phones).
         mNavigationBarCanMove = width != height && shortSizeDp < 600;
 
-        boolean mIsC801 = "msm8953_64_c801".equals(android.os.SystemProperties.get("ro.build.product",""));
-        mHasNavigationBar = res.getBoolean(com.android.internal.R.bool.config_showNavigationBar) && (!mIsC801);
+        mHasNavigationBar = res.getBoolean(com.android.internal.R.bool.config_showNavigationBar);
 
-        
-        
         // Allow a system property to override this. Used by the emulator.
         // See also hasNavigationBar().
-    /*    String navBarOverride = SystemProperties.get("qemu.hw.mainkeys");
+        String navBarOverride = SystemProperties.get("qemu.hw.mainkeys");
         if ("1".equals(navBarOverride)) {
             mHasNavigationBar = false;
         } else if ("0".equals(navBarOverride)) {
             mHasNavigationBar = true;
-        }*/
+        }
 
         // For demo purposes, allow the rotation of the HDMI display to be controlled.
         // By default, HDMI locks rotation to landscape.
@@ -3905,16 +3915,30 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             }
             return -1;
         } else if (keyCode == KeyEvent.KEYCODE_MENU) {
+        if(mShortPressOnMenuBehavior == SHORT_PRESS_MENU_NOTHING){
             // Hijack modified menu keys for debugging features
+           
             final int chordBug = KeyEvent.META_SHIFT_ON;
 
-            if (down && repeatCount == 0) {
-                if (mEnableShiftMenuBugReports && (metaState & chordBug) == chordBug) {
-                    Intent intent = new Intent(Intent.ACTION_BUG_REPORT);
-                    mContext.sendOrderedBroadcastAsUser(intent, UserHandle.CURRENT,
-                            null, null, null, 0, null, null);
-                    return -1;
+                if (down && repeatCount == 0) {
+                    if (mEnableShiftMenuBugReports && (metaState & chordBug) == chordBug) {
+                        Intent intent = new Intent(Intent.ACTION_BUG_REPORT);
+                        mContext.sendOrderedBroadcastAsUser(intent, UserHandle.CURRENT,
+                                null, null, null, 0, null, null);
+                        return -1;
+                    }
                 }
+                
+            }
+            else {
+                if (!keyguardOn) {
+                    if (down && repeatCount == 0) {
+                        preloadRecentApps();
+                    } else if (!down) {
+                        toggleRecentApps();
+                    }
+                }
+                return -1;
             }
         } else if (keyCode == KeyEvent.KEYCODE_SEARCH) {
             if (down) {
