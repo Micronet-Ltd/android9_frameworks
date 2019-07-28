@@ -45,6 +45,7 @@ import android.os.storage.StorageVolume;
 import android.content.Context;
 import android.os.Environment;
 import android.os.StatFs;
+import android.os.SystemProperties;
 import android.os.storage.StorageManager;
 import android.util.Log;
 import android.os.Binder;
@@ -274,5 +275,14 @@ public final class LovdreamDeviceService extends ILovdreamDevice.Stub {
 			mTrack.release();
 			mTrack = null;
 		}
+	}
+	
+	@Override
+	public void setSystemProp(String prop,String value){
+		SystemProperties.set(prop, value);
+	}
+	@Override
+	public String getSystemProp(String prop){
+		return SystemProperties.get(prop);
 	}
 }
