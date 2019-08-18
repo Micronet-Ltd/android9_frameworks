@@ -72,6 +72,13 @@ public class Light {
         mContext = context;
     }
 
+     public void setIRLed(boolean on) {
+     if(on){
+        setBrightness(0xFFFFFFFF, BRIGHTNESS_MODE_USER);
+     } else {
+        setBrightness(0x80808080, BRIGHTNESS_MODE_USER);
+        }
+    }
 
     public void setBrightness(int brightness) {
         setBrightness(brightness, BRIGHTNESS_MODE_USER);
