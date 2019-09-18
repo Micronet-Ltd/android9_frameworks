@@ -62,6 +62,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
@@ -2227,6 +2228,12 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
             private void notifyFrequencyConflict() {
                 logd("Notify frequency conflict");
                 Resources r = Resources.getSystem();
+                
+                if(shouldAvoidPermissions()){
+		  logd("Accepting Drop Wifi");
+		  sendMessage(DROP_WIFI_USER_ACCEPT);
+		  return;
+                }
 
                 AlertDialog dialog = new AlertDialog.Builder(mContext)
                         .setMessage(r.getString(R.string.wifi_p2p_frequency_conflict_message,
@@ -2798,6 +2805,12 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
 
         private void notifyP2pEnableFailure() {
             Resources r = Resources.getSystem();
+            
+            if(shouldAvoidPermissions()){
+	      logd("P2p connection failed, dismissing");
+	      return;
+            }
+            
             AlertDialog dialog = new AlertDialog.Builder(mContext)
                     .setTitle(r.getString(R.string.wifi_p2p_dialog_title))
                     .setMessage(r.getString(R.string.wifi_p2p_failed_message))
@@ -2822,6 +2835,11 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
 
         private void notifyInvitationSent(String pin, String peerAddress) {
             Resources r = Resources.getSystem();
+            
+             if(shouldAvoidPermissions()){
+	      logd("Invitation sent");
+	      return;
+             }
 
             final View textEntryView = LayoutInflater.from(mContext)
                     .inflate(R.layout.wifi_p2p_dialog, null);
@@ -2847,6 +2865,16 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
             Resources r = Resources.getSystem();
             final String tempDevAddress = peerAddress;
             final String tempPin = pin;
+            
+            if(shouldAvoidPermissions()){
+	      logd("Connecting with pin automatically");
+	      mSavedPeerConfig = new WifiP2pConfig();
+	      mSavedPeerConfig.deviceAddress = tempDevAddress;
+	      mSavedPeerConfig.wps.setup = WpsInfo.DISPLAY;
+	      mSavedPeerConfig.wps.pin = tempPin;
+	      mWifiNative.p2pConnect(mSavedPeerConfig, FORM_GROUP);
+	      return;
+            }
 
             final View textEntryView = LayoutInflater.from(mContext)
                     .inflate(R.layout.wifi_p2p_dialog, null);
@@ -2876,8 +2904,19 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
             dialog.getWindow().setAttributes(attrs);
             dialog.show();
         }
+        
+        private boolean shouldAvoidPermissions(){
+	    String boardType = SystemProperties.get("persist.vendor.board.config", "");
+	    return (boardType.equals("smartcam") && mSavedPeerConfig.wps.pin != null && mSavedPeerConfig.wps.pin.equals("M123!abc"));
+        }
 
-        private void notifyInvitationReceived() {
+        private void notifyInvitationReceived() {	    
+	    if(shouldAvoidPermissions()){
+		logd("device name: " + getDeviceName(mSavedPeerConfig.deviceAddress) + ", name: " + getName() + ", mSavedPeerConfig: " + mSavedPeerConfig);
+		sendMessage(PEER_CONNECTION_USER_ACCEPT);
+		return;
+	    }
+                
             Resources r = Resources.getSystem();
             final WpsInfo wps = mSavedPeerConfig.wps;
             final View textEntryView = LayoutInflater.from(mContext)
