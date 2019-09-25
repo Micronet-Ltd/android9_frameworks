@@ -62,6 +62,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
@@ -708,6 +709,13 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
         // Is wifi on or off.
         private boolean mIsWifiEnabled = false;
 
+        // p2p start failure count.
+        // Current design keeps on calling setupIface even though p2p init fails in supplicant.
+        // Break this infinite loop by maintaining a temp counter for continuous setup failures.
+        private int mSetupFailureCount = 0;
+        // Threshold for continuous setup failure.
+        private static final int P2P_SETUP_FAILURE_COUNT_THRESHOLD = 10;
+
         // Saved WifiP2pConfig for an ongoing peer connection. This will never be null.
         // The deviceAddress will be an empty string when the device is inactive
         // or if it is connected without any ongoing join request
@@ -782,6 +790,7 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
                             checkAndReEnableP2p();
                         } else {
                             mIsWifiEnabled = false;
+                            mSetupFailureCount = 0;
                             // Teardown P2P if it's up already.
                             sendMessage(DISABLE_P2P);
                         }
@@ -791,10 +800,14 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
                 // Register for interface availability from HalDeviceManager
                 mWifiNative.registerInterfaceAvailableListener((boolean isAvailable) -> {
                     mIsInterfaceAvailable = isAvailable;
-                    if (isAvailable) {
-                        checkAndReEnableP2p();
+                    if (mSetupFailureCount < P2P_SETUP_FAILURE_COUNT_THRESHOLD) {
+                        if (isAvailable) {
+                            checkAndReEnableP2p();
+                        }
+                        checkAndSendP2pStateChangedBroadcast();
+                    } else {
+                        Log.i(TAG, "Ignore InterfaceAvailable for continuous failures. count=" +mSetupFailureCount);
                     }
-                    checkAndSendP2pStateChangedBroadcast();
                 }, getHandler());
             }
         }
@@ -1253,9 +1266,11 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
                             checkAndSendP2pStateChangedBroadcast();
                         }, getHandler());
                         if (mInterfaceName == null) {
+                            mSetupFailureCount++;
                             Log.e(TAG, "Failed to setup interface for P2P");
                             break;
                         }
+                        mSetupFailureCount = 0;
                         try {
                             mNwService.setInterfaceUp(mInterfaceName);
                         } catch (RemoteException re) {
@@ -2212,6 +2227,13 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
 
             private void notifyFrequencyConflict() {
                 logd("Notify frequency conflict");
+		
+		if(shouldAvoidPermissions()){
+		  logd("Accepting Drop Wifi");
+		  sendMessage(DROP_WIFI_USER_ACCEPT);
+		  return;
+                }
+		
                 Resources r = Resources.getSystem();
 
                 AlertDialog dialog = new AlertDialog.Builder(mContext)
@@ -2783,6 +2805,11 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
         }
 
         private void notifyP2pEnableFailure() {
+	    if(shouldAvoidPermissions()){
+	      logd("P2p connection failed, dismissing");
+	      return;
+            }
+	    
             Resources r = Resources.getSystem();
             AlertDialog dialog = new AlertDialog.Builder(mContext)
                     .setTitle(r.getString(R.string.wifi_p2p_dialog_title))
@@ -2807,6 +2834,11 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
         }
 
         private void notifyInvitationSent(String pin, String peerAddress) {
+	    if(shouldAvoidPermissions()){
+	      logd("Invitation sent");
+	      return;
+            }
+	    
             Resources r = Resources.getSystem();
 
             final View textEntryView = LayoutInflater.from(mContext)
@@ -2833,6 +2865,16 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
             Resources r = Resources.getSystem();
             final String tempDevAddress = peerAddress;
             final String tempPin = pin;
+	    
+	    if(shouldAvoidPermissions()){
+	      logd("Connecting with pin automatically");
+	      mSavedPeerConfig = new WifiP2pConfig();
+	      mSavedPeerConfig.deviceAddress = tempDevAddress;
+	      mSavedPeerConfig.wps.setup = WpsInfo.DISPLAY;
+	      mSavedPeerConfig.wps.pin = tempPin;
+	      mWifiNative.p2pConnect(mSavedPeerConfig, FORM_GROUP);
+	      return;
+            }
 
             final View textEntryView = LayoutInflater.from(mContext)
                     .inflate(R.layout.wifi_p2p_dialog, null);
@@ -2862,8 +2904,19 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
             dialog.getWindow().setAttributes(attrs);
             dialog.show();
         }
+	
+	private boolean shouldAvoidPermissions(){
+	    String boardType = SystemProperties.get("persist.vendor.board.config", "");
+	    logd("shouldAvoidPermissions: pin: " + (mSavedPeerConfig.wps.pin != null ? mSavedPeerConfig.wps.pin : "the pin is null!"));
+	    return (boardType.equals("smartcam") /*&& mSavedPeerConfig.wps.pin != null && mSavedPeerConfig.wps.pin.equals("M123!abc")*/);
+        }
 
         private void notifyInvitationReceived() {
+	    if(shouldAvoidPermissions()){		
+		sendMessage(PEER_CONNECTION_USER_ACCEPT);
+		return;
+	    }
+	    
             Resources r = Resources.getSystem();
             final WpsInfo wps = mSavedPeerConfig.wps;
             final View textEntryView = LayoutInflater.from(mContext)

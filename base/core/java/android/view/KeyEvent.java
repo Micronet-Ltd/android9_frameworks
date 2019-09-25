@@ -883,8 +883,8 @@ public class KeyEvent extends InputEvent implements Parcelable {
     /**
      * {@link #getAction} value: multiple duplicate key events have
      * occurred in a row, or a complex string is being delivered.  If the
-     * key code is not {#link {@link #KEYCODE_UNKNOWN} then the
-     * {#link {@link #getRepeatCount()} method returns the number of times
+     * key code is not {@link #KEYCODE_UNKNOWN} then the
+     * {@link #getRepeatCount()} method returns the number of times
      * the given key code should be executed.
      * Otherwise, if the key code is {@link #KEYCODE_UNKNOWN}, then
      * this is a sequence of characters as returned by {@link #getCharacters}.
@@ -1870,6 +1870,7 @@ public class KeyEvent extends InputEvent implements Parcelable {
     /** @hide */
     public static final boolean isWakeKey(int keyCode) {
         switch (keyCode) {
+            case KeyEvent.KEYCODE_HOME:
             case KeyEvent.KEYCODE_BACK:
             case KeyEvent.KEYCODE_MENU:
             case KeyEvent.KEYCODE_WAKEUP:

@@ -3063,8 +3063,6 @@ public class Intent implements Parcelable, Cloneable {
     public static final String ACTION_IDLE_MAINTENANCE_START =
             "android.intent.action.ACTION_IDLE_MAINTENANCE_START";
 
-    @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
-    public static final String ACTION_VINPUTS_CHANGED = "android.intent.action.VINPUTS_CHANGED";
     /**
      * Broadcast Action:  A broadcast when idle maintenance should be stopped.
      * This means that the user was not interacting with the device as a result
@@ -3090,6 +3088,8 @@ public class Intent implements Parcelable, Cloneable {
      *
      * @hide
      */
+    @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
+    public static final String ACTION_VINPUTS_CHANGED = "android.intent.action.VINPUTS_CHANGED";
     @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
     public static final String ACTION_IDLE_MAINTENANCE_END =
             "android.intent.action.ACTION_IDLE_MAINTENANCE_END";
@@ -5556,7 +5556,7 @@ public class Intent implements Parcelable, Cloneable {
     /**
      * If set and this intent is being used to launch a new activity from an
      * existing one, then the reply target of the existing activity will be
-     * transfered to the new activity.  This way the new activity can call
+     * transferred to the new activity.  This way, the new activity can call
      * {@link android.app.Activity#setResult} and have that result sent back to
      * the reply target of the original activity.
      */

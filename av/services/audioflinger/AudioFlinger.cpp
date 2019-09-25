@@ -718,10 +718,12 @@ sp<IAudioTrack> AudioFlinger::createTrack(const CreateTrackInput& input,
     }
 
     // further format checks are performed by createTrack_l() depending on the thread type
-    if (!audio_is_valid_format(input.config.format)) {
-        ALOGE("createTrack() invalid format %#x", input.config.format);
-        lStatus = BAD_VALUE;
-        goto Exit;
+    if ((!audio_is_valid_format(input.config.format)) &&
+         ((property_get_bool("audio.aptx.aac_latm.decoder.enabled", false)) &&
+         (!(input.config.format == AUDIO_FORMAT_AAC_LATM_LC || input.config.format == AUDIO_FORMAT_APTX)))) {
+            ALOGE("createTrack() invalid format %#x", input.config.format);
+            lStatus = BAD_VALUE;
+            goto Exit;
     }
 
     {
@@ -3001,6 +3003,8 @@ sp<IEffect> AudioFlinger::createEffect(
     }
 
     {
+        Mutex::Autolock _l(mLock);
+
         if (!EffectsFactoryHalInterface::isNullUuid(&pDesc->uuid)) {
             // if uuid is specified, request effect descriptor
             lStatus = mEffectsFactoryHal->getDescriptor(&pDesc->uuid, &desc);
@@ -3056,6 +3060,8 @@ sp<IEffect> AudioFlinger::createEffect(
                 desc = d;
             }
         }
+    }
+    {
 
         // Do not allow auxiliary effects on a session different from 0 (output mix)
         if (sessionId != AUDIO_SESSION_OUTPUT_MIX &&
@@ -3102,6 +3108,7 @@ sp<IEffect> AudioFlinger::createEffect(
                 uint32_t sessionType = mPlaybackThreads.valueAt(i)->hasAudioSession(sessionId);
                 if (sessionType != 0) {
                     io = mPlaybackThreads.keyAt(i);
+                    // thread with same effect session is preferable
                     if ((sessionType & ThreadBase::EFFECT_SESSION) != 0) {
                         break;
                     }
@@ -3130,6 +3137,21 @@ sp<IEffect> AudioFlinger::createEffect(
                 io = mPlaybackThreads.keyAt(0);
             }
             ALOGV("createEffect() got io %d for effect %s", io, desc.name);
+        } else if (checkPlaybackThread_l(io) != nullptr) {
+            // allow only one effect chain per sessionId on mPlaybackThreads.
+            for (size_t i = 0; i < mPlaybackThreads.size(); i++) {
+                const audio_io_handle_t checkIo = mPlaybackThreads.keyAt(i);
+                if (io == checkIo) continue;
+                const uint32_t sessionType =
+                        mPlaybackThreads.valueAt(i)->hasAudioSession(sessionId);
+                if ((sessionType & ThreadBase::EFFECT_SESSION) != 0) {
+                    ALOGE("%s: effect %s io %d denied because session %d effect exists on io %d",
+                            __func__, desc.name, (int)io, (int)sessionId, (int)checkIo);
+                    android_errorWriteLog(0x534e4554, "123237974");
+                    lStatus = BAD_VALUE;
+                    goto Exit;
+                }
+            }
         }
         ThreadBase *thread = checkRecordThread_l(io);
         if (thread == NULL) {
