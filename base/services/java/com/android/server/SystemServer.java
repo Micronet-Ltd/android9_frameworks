@@ -325,11 +325,11 @@ public final class SystemServer {
                 SystemClock.setCurrentTimeMillis(EARLIEST_SUPPORTED_TIME);
             }
             
-            //try {
-            //	SystemProperties.set("persist.sys.lov.broad", String.valueOf(1));
-			//} catch (Exception e) {
-			//	e.printStackTrace();
-			//}
+            try {
+            	SystemProperties.set("persist.sys.lov.broad", String.valueOf(1));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
             //
             // Default the timezone property to GMT if not set.
             //
