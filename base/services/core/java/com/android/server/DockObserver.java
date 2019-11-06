@@ -30,6 +30,7 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
@@ -43,6 +44,8 @@ import android.util.Slog;
 
 import com.android.internal.util.DumpUtils;
 
+import java.io.IOException;
+import java.io.BufferedReader;
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -110,6 +113,12 @@ final class DockObserver extends SystemService {
             synchronized (mLock) {
                 mSystemReady = true;
 
+                if(Build.MODEL.contains("MSCAM")){
+                    readAndUpdateMcuFpgaVersions();
+                } else {
+                    SystemProperties.set("hw.build.version.mcu", "unknown");
+                    SystemProperties.set("hw.build.version.fpga", "unknown");
+                }
                 // don't bother broadcasting undocked here
                 if (mReportedDockState != Intent.EXTRA_DOCK_STATE_UNDOCKED) {
                     updateLocked();
@@ -189,6 +198,9 @@ final class DockObserver extends SystemService {
             intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
             intent.putExtra(Intent.EXTRA_DOCK_STATE, convertDockState(mReportedDockState));
             intent.putExtra("DockValue", mReportedDockState);
+            if (Build.MODEL.contains("MSCAM")){
+                readAndUpdateMcuFpgaVersions();
+            }
 
             boolean dockSoundsEnabled = Settings.Global.getInt(cr,
                     Settings.Global.DOCK_SOUNDS_ENABLED, 1) == 1;
@@ -436,4 +448,28 @@ final class DockObserver extends SystemService {
             }
         }
     }
+    
+    private void readAndUpdateMcuFpgaVersions(){
+        SystemProperties.set("hw.build.version.mcu", getVersion("/proc/mcu_version"));
+        SystemProperties.set("hw.build.version.fpga", getVersion("/proc/fpga_version"));
+    }
+    
+    private String getVersion(String path){
+        String version = "unknown";
+        String line = null;
+        try {
+            FileReader fileReader = new FileReader(path);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            if ((line = bufferedReader.readLine()) != null) {
+                version = line;
+            }
+            bufferedReader.close();
+        } catch (FileNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return version;
+    }
+    
 }
