@@ -116,32 +116,20 @@ public final class LovdreamDeviceService extends ILovdreamDevice.Stub {
 	@Override
 	public void writeToFile(String path, String flag) {
 		//Binder.clearCallingIdentity();
-		try {
-			if(Integer.valueOf(path)==0){
-				setThreeLightColor(Integer.valueOf(flag));
-			}else if(Integer.valueOf(path)==1){
-				setButtonBackLight(Boolean.valueOf(flag));
-			}else{
-				boolean res = true;
-				File file = new File(path);
-				File dir = new File(file.getParent());
-				if (!dir.exists())
-					dir.mkdirs();
-
-				try {
-					FileWriter mFileWriter = new FileWriter(file, false);
-					mFileWriter.write(flag);
-					mFileWriter.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-					android.util.Log.d(TAG, "e------>" + (e));
-					res = false;
-				}
+		boolean res = true;
+		 try {
+			File file = new File(path);
+			File dir = new File(file.getParent());
+			if (!dir.exists())
+			dir.mkdirs();
+			FileWriter mFileWriter = new FileWriter(file, false);
+			mFileWriter.write(flag);
+			mFileWriter.close();
+			} catch (IOException e2) {
+			e2.printStackTrace();
+			android.util.Log.d(TAG, "e------>" + (e2));
+			res = false;
 			}
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 	
 	Light mThreeColorLight;
