@@ -2864,17 +2864,7 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
         private void notifyP2pProvDiscShowPinRequest(String pin, String peerAddress) {
             Resources r = Resources.getSystem();
             final String tempDevAddress = peerAddress;
-            final String tempPin = pin;
-	    
-	    if(shouldAvoidPermissions()){
-	      logd("Connecting with pin automatically");
-	      mSavedPeerConfig = new WifiP2pConfig();
-	      mSavedPeerConfig.deviceAddress = tempDevAddress;
-	      mSavedPeerConfig.wps.setup = WpsInfo.DISPLAY;
-	      mSavedPeerConfig.wps.pin = tempPin;
-	      mWifiNative.p2pConnect(mSavedPeerConfig, FORM_GROUP);
-	      return;
-            }
+            final String tempPin = pin;            
 
             final View textEntryView = LayoutInflater.from(mContext)
                     .inflate(R.layout.wifi_p2p_dialog, null);
@@ -2905,17 +2895,33 @@ public class WifiP2pServiceImpl extends IWifiP2pManager.Stub {
             dialog.show();
         }
 	
-	private boolean shouldAvoidPermissions(){
-	    String boardType = SystemProperties.get("persist.vendor.board.config", "");
-	    logd("shouldAvoidPermissions: pin: " + (mSavedPeerConfig.wps.pin != null ? mSavedPeerConfig.wps.pin : "the pin is null!"));
-	    return (boardType.equals("smartcam") /*&& mSavedPeerConfig.wps.pin != null && mSavedPeerConfig.wps.pin.equals("M123!abc")*/);
+        private boolean shouldAvoidPermissions(){
+            String boardType = SystemProperties.get("persist.vendor.board.config", "");	    
+            return (boardType.equals("smartcam"));
         }
+        
+        BroadcastReceiver mResponseReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {				
+                String action = intent.getAction();
+                logd("*******Received broadcast with action: " + action);
+                if(action.equals(Intent.ACTION_SEND)){
+                    sendMessage(PEER_CONNECTION_USER_ACCEPT);
+                    mContext.unregisterReceiver(mResponseReceiver);
+                }
+            }
+        };
 
         private void notifyInvitationReceived() {
-	    if(shouldAvoidPermissions()){		
-		sendMessage(PEER_CONNECTION_USER_ACCEPT);
-		return;
-	    }
+            if(shouldAvoidPermissions()){		
+                IntentFilter mIntentFilter = new IntentFilter();		
+                mIntentFilter.addAction(Intent.ACTION_SEND);
+                mContext.registerReceiver(mResponseReceiver, mIntentFilter);
+								
+                Intent intent = new Intent("com.micronet.wifi.p2p.INVITE_RECEIVED");
+                mContext.sendBroadcast(intent);
+                return;
+            }
 	    
             Resources r = Resources.getSystem();
             final WpsInfo wps = mSavedPeerConfig.wps;
