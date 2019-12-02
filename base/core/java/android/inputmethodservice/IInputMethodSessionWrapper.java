@@ -316,7 +316,8 @@ class IInputMethodSessionWrapper extends IInputMethodSession.Stub
             if (event instanceof KeyEvent) {
                 KeyEvent keyEvent = (KeyEvent)event;
 
-                if (keyEvent.getSource() == InputDevice.SOURCE_VINPUTS) {
+                if (keyEvent.getSource() == InputDevice.SOURCE_VINPUTS &&
+                    keyEvent.getFlags() == keyEvent.FLAG_FROM_SYSTEM) {
 
                       
                     if (LOG_VINPUTS){
