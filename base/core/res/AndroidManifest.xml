@@ -363,7 +363,9 @@
     <protected-broadcast android:name="android.net.wigig.p2p.PEERS_CHANGED" />
     <protected-broadcast android:name="android.net.wigig.p2p.DISCOVERY_STATE_CHANGE" />
     <protected-broadcast android:name="android.net.wigig.p2p.THIS_DEVICE_CHANGED" />
-    <protected-broadcast android:name="android.net.wigig.p2p.PERSISTENT_GROUPS_CHANGED" />
+    <protected-broadcast android:name="android.net.wigig.p2p.PERSISTENT_GROUPS_CHANGED" />    
+    <!-- Micronet Broadcasts -->
+    <protected-broadcast android:name="com.micronet.wifi.p2p.INVITE_RECEIVED"/>
 
     <protected-broadcast android:name="android.net.wifi.WIFI_STATE_CHANGED" />
     <protected-broadcast android:name="com.qualcomm.qti.net.wifi.WIFI_DATA_STALL" />
@@ -617,7 +619,7 @@
     <protected-broadcast android:name="android.media.tv.action.WATCH_NEXT_PROGRAM_BROWSABLE_DISABLED" />
     <protected-broadcast android:name="android.media.tv.action.CHANNEL_BROWSABLE_REQUESTED" />
     <protected-broadcast android:name="com.android.server.InputMethodManagerService.SHOW_INPUT_METHOD_PICKER" />
-    <protected-broadcast android:name="android.intent.action.VINPUTS_CHANGED" />
+    <!--<protected-broadcast android:name="android.intent.action.VINPUTS_CHANGED" /> -->
 
     <!-- Time zone rules update intents fired by the system server -->
     <protected-broadcast android:name="com.android.intent.action.timezone.RULES_UPDATE_OPERATION" />

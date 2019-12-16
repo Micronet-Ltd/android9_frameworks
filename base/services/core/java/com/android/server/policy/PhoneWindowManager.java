@@ -6507,12 +6507,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 break;
             }
 
-	    case KeyEvent.KEYCODE_HOME: {
-                 result &= ~ACTION_PASS_TO_USER;
-                 isWakeKey = true;
-                break;
-            }
-
             case KeyEvent.KEYCODE_WAKEUP: {
                 result &= ~ACTION_PASS_TO_USER;
                 isWakeKey = true;
