@@ -105,6 +105,13 @@ public class PhoneStatusBarPolicy implements Callback, Callbacks,
 
     public static final int LOCATION_STATUS_ICON_ID = R.drawable.stat_sys_location;
     public static final int NUM_TASKS_FOR_INSTANT_APP_INFO = 5;
+    
+    //add by xxf
+    private static final int BT_CLOSE=0;
+    private static final int BT_OPEN_DISCONNECT=1;
+    private static final int BT_OPEN_CONNECT=2;
+    private static final String BT_ACTION = "lovdream.bt.contect";
+  //add by xxf
 
     private final String mSlotCast;
     private final String mSlotHotspot;
@@ -443,9 +450,34 @@ public class PhoneStatusBarPolicy implements Callback, Callbacks,
             }
         }
 
+        //add by xxf
+        int state = BT_CLOSE;
+      if(bluetoothVisible) {
+    	  state = BT_OPEN_DISCONNECT;
+    	  if(mBluetooth.isBluetoothConnected()){
+    		  state = BT_OPEN_CONNECT;
+    	  }
+      }
+      sendBroadCastToDialer(state);
+        //add by xxf
         mIconController.setIcon(mSlotBluetooth, iconId, contentDescription);
         mIconController.setIconVisibility(mSlotBluetooth, bluetoothVisible);
     }
+    
+    //add by xxf
+    /**
+     *@param  state
+     * BT_CLOSE: 蓝牙未开启
+     * BT_OPEN_DISCONNECT.蓝牙开启,但是未连接
+     * BT_OPEN_CONNECT.蓝牙开启,并且蓝牙耳机连接了
+     * 
+     * **/
+    private void sendBroadCastToDialer(int state){
+    	Intent intent = new Intent(BT_ACTION);
+    	intent.putExtra("state", state);
+    	mContext.sendBroadcast(intent);
+    }
+    //add by xxf
 
     private final void updateTTY() {
         TelecomManager telecomManager =

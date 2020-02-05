@@ -17,6 +17,4 @@
 <!-- This feature indicates that the device supports host-based
      NFC-F card emulation -->
 <permissions>
-    <feature name="android.hardware.nfc.hcef" />
-    <feature name="android.hardware.nfc.any" />
 </permissions>

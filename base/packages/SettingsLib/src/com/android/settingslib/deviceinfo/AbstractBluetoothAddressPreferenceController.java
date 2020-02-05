@@ -26,6 +26,7 @@ import android.text.TextUtils;
 
 import com.android.settingslib.R;
 import com.android.settingslib.core.lifecycle.Lifecycle;
+import android.telephony.TelephonyManager;
 
 /**
  * Preference controller for bluetooth address
@@ -42,8 +43,10 @@ public abstract class AbstractBluetoothAddressPreferenceController
 
     private Preference mBtAddress;
 
+    private Context mContext;
     public AbstractBluetoothAddressPreferenceController(Context context, Lifecycle lifecycle) {
         super(context, lifecycle);
+        mContext=context;
     }
 
     @Override
@@ -73,7 +76,9 @@ public abstract class AbstractBluetoothAddressPreferenceController
     protected void updateConnectivity() {
         BluetoothAdapter bluetooth = BluetoothAdapter.getDefaultAdapter();
         if (bluetooth != null && mBtAddress != null) {
-            String address = bluetooth.isEnabled() ? bluetooth.getAddress() : null;
+            //String address = bluetooth.isEnabled() ? bluetooth.getAddress() : null;
+            TelephonyManager telephonyManager = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+            String address = telephonyManager.getBtAddr();
             if (!TextUtils.isEmpty(address)) {
                 // Convert the address to lowercase for consistency with the wifi MAC address.
                 mBtAddress.setSummary(address.toLowerCase());

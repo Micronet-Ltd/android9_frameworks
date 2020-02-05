@@ -29,6 +29,8 @@ import android.text.TextUtils;
 
 import com.android.settingslib.R;
 import com.android.settingslib.core.lifecycle.Lifecycle;
+import android.telephony.TelephonyManager;
+
 
 /**
  * Preference controller for WIFI MAC address
@@ -47,10 +49,12 @@ public abstract class AbstractWifiMacAddressPreferenceController
 
     private Preference mWifiMacAddress;
     private final WifiManager mWifiManager;
+    private Context mmcontext;
 
     public AbstractWifiMacAddressPreferenceController(Context context, Lifecycle lifecycle) {
         super(context, lifecycle);
         mWifiManager = context.getSystemService(WifiManager.class);
+        mmcontext=context;
     }
 
     @Override
@@ -79,10 +83,11 @@ public abstract class AbstractWifiMacAddressPreferenceController
     @Override
     protected void updateConnectivity() {
         WifiInfo wifiInfo = mWifiManager.getConnectionInfo();
-        final int macRandomizationMode = Settings.Global.getInt(mContext.getContentResolver(),
+        final int macRandomizationMode = Settings.Global.getInt(mmcontext.getContentResolver(),
                 Settings.Global.WIFI_CONNECTED_MAC_RANDOMIZATION_ENABLED, 0);
-        final String macAddress = wifiInfo == null ? null : wifiInfo.getMacAddress();
-
+        //final String macAddress = wifiInfo == null ? null : wifiInfo.getMacAddress();
+        TelephonyManager telephonyManager = (TelephonyManager) mmcontext.getSystemService(Context.TELEPHONY_SERVICE);
+        final String macAddress = telephonyManager.getWlanAddr();
         if (TextUtils.isEmpty(macAddress)) {
             mWifiMacAddress.setSummary(R.string.status_unavailable);
         } else if (macRandomizationMode == 1 && WifiInfo.DEFAULT_MAC_ADDRESS.equals(macAddress)) {
