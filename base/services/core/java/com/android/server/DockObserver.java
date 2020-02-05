@@ -31,6 +31,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
+import android.os.FileObserver;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
@@ -46,6 +47,7 @@ import com.android.internal.util.DumpUtils;
 
 import java.io.IOException;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -88,6 +90,8 @@ final class DockObserver extends SystemService {
 
     private SettingsObserver mSettingsObserver;
     private BroadcastReceiver mShutdownTimeoutListener = null;
+    private McuFileObserver mMcuFileObserver;
+ 
 
     public DockObserver(Context context) {
         super(context);
@@ -105,6 +109,10 @@ final class DockObserver extends SystemService {
     @Override
     public void onStart() {
         publishBinderService(TAG, new BinderService());
+        if(Build.MODEL.contains("MSCAM")){
+            mMcuFileObserver = new McuFileObserver();
+            mMcuFileObserver.startWatching();        
+        } 
     }
 
     @Override
@@ -471,5 +479,17 @@ final class DockObserver extends SystemService {
         }
         return version;
     }
-    
+        
+    private class McuFileObserver extends FileObserver {
+        public McuFileObserver() {
+            super("/proc", FileObserver.CLOSE_WRITE);
+        }
+
+        @Override
+        public void onEvent(int event, String path) {
+            if(path.equals("mcu_version")){
+                readAndUpdateMcuFpgaVersions();
+            }
+        }
+    }
 }
