@@ -16,5 +16,5 @@
 
 <!-- Feature for devices with gyroscope. -->
 <permissions>
-    <feature name="android.hardware.sensor.gyroscope" />
+	<feature name="android.hardware.sensor.gyroscope" />
 </permissions>

@@ -32,6 +32,9 @@ public class ShutdownActivity extends Activity {
     private boolean mReboot;
     private boolean mConfirm;
     private boolean mUserRequested;
+	//add by xxf
+    private String mReason;
+	//add by xxf
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,11 +42,11 @@ public class ShutdownActivity extends Activity {
 
         Intent intent = getIntent();
         mReboot = Intent.ACTION_REBOOT.equals(intent.getAction());
+		//add by xxf
+        mReason = (String)intent.getExtra(Intent.EXTRA_REASON,null);
+		//add by xxf
         mConfirm = intent.getBooleanExtra(Intent.EXTRA_KEY_CONFIRM, false);
         mUserRequested = intent.getBooleanExtra(Intent.EXTRA_USER_REQUESTED_SHUTDOWN, false);
-        final String reason = mUserRequested
-                ? PowerManager.SHUTDOWN_USER_REQUESTED
-                : intent.getStringExtra(Intent.EXTRA_REASON);
         Slog.i(TAG, "onCreate(): confirm=" + mConfirm);
 
         Thread thr = new Thread("ShutdownActivity") {
@@ -53,9 +56,13 @@ public class ShutdownActivity extends Activity {
                         ServiceManager.getService(Context.POWER_SERVICE));
                 try {
                     if (mReboot) {
-                        pm.reboot(mConfirm, reason, false);
+					//add by xxf
+                        pm.reboot(mConfirm, mReason, false);
+						//add by xxf
                     } else {
-                        pm.shutdown(mConfirm, reason, false);
+                        pm.shutdown(mConfirm,
+                                    mUserRequested ? PowerManager.SHUTDOWN_USER_REQUESTED : null,
+                                    false);
                     }
                 } catch (RemoteException e) {
                 }

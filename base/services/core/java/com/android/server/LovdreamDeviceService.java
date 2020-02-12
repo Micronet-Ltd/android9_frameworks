@@ -117,19 +117,19 @@ public final class LovdreamDeviceService extends ILovdreamDevice.Stub {
 	public void writeToFile(String path, String flag) {
 		//Binder.clearCallingIdentity();
 		boolean res = true;
-		 try {
+		try {
 			File file = new File(path);
 			File dir = new File(file.getParent());
 			if (!dir.exists())
-			dir.mkdirs();
+				dir.mkdirs();
 			FileWriter mFileWriter = new FileWriter(file, false);
 			mFileWriter.write(flag);
 			mFileWriter.close();
-			} catch (IOException e2) {
+		} catch (IOException e2) {
 			e2.printStackTrace();
 			android.util.Log.d(TAG, "e------>" + (e2));
 			res = false;
-			}
+		}
 	}
 	
 	Light mThreeColorLight;

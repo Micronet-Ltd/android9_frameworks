@@ -1330,7 +1330,6 @@ interface ITelephony {
     * @hide
     */
     String getCdmaPrlVersion(int subId);
-
     /**
      * Get snapshot of Telephony histograms
      * @return List of Telephony histograms
@@ -1339,6 +1338,7 @@ interface ITelephony {
      * Or the calling app has carrier privileges.
      */
     List<TelephonyHistogram> getTelephonyHistograms();
+    String getSN();
 
     /**
      * Set the allowed carrier list for slotIndex
@@ -1523,7 +1523,6 @@ interface ITelephony {
     /*lovdream extended start*/
     String getSMSAutoRegisterInfo(in int itemId);
     void setSMSAutoRegisterInfo(in String values, in int itemId);
-    String getSN();
     String getCUReferenceNumber();
     String getNvFactoryData3I();
     byte[] getNvFactoryData3IByte();
