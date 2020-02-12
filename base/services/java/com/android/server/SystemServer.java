@@ -986,6 +986,10 @@ public final class SystemServer {
             traceBeginAndSlog("PinnerService");
             mSystemServiceManager.startService(PinnerService.class);
             traceEnd();
+            
+            traceBeginAndSlog("PermissionService");
+            mSystemServiceManager.startService(PermissionService.class);
+            traceEnd();
         } catch (RuntimeException e) {
             Slog.e("System", "******************************************");
             Slog.e("System", "************ Failure starting core service", e);
