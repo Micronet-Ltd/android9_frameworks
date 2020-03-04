@@ -109,7 +109,7 @@ final class DockObserver extends SystemService {
     @Override
     public void onStart() {
         publishBinderService(TAG, new BinderService());
-        if(SystemProperties.getInt("hw.board.id", 0) >= 2){
+        if(Build.MODEL.contains("MSCAM")){
             mMcuFileObserver = new McuFileObserver();
             mMcuFileObserver.startWatching();        
         } 
@@ -121,7 +121,7 @@ final class DockObserver extends SystemService {
             synchronized (mLock) {
                 mSystemReady = true;
 
-                if(SystemProperties.getInt("hw.board.id", 0) >= 2){
+                if(Build.MODEL.contains("MSCAM")){
                     readAndUpdateMcuFpgaVersions();
                 } else {
                     SystemProperties.set("hw.build.version.mcu", "unknown");
@@ -206,7 +206,7 @@ final class DockObserver extends SystemService {
             intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
             intent.putExtra(Intent.EXTRA_DOCK_STATE, convertDockState(mReportedDockState));
             intent.putExtra("DockValue", mReportedDockState);
-            if(SystemProperties.getInt("hw.board.id", 0) >= 2){
+            if (Build.MODEL.contains("MSCAM")){
                 readAndUpdateMcuFpgaVersions();
             }
 
