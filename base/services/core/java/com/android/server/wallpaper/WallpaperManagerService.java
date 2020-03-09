@@ -719,7 +719,6 @@ public class WallpaperManagerService extends IWallpaperManager.Stub
                     // We calculate the largest power-of-two under the actual ratio rather than
                     // just let the decode take care of it because we also want to remap where the
                     // cropHint rectangle lies in the decoded [super]rect.
-                    final BitmapFactory.Options scaler;
                     final int actualScale = cropHint.height() / wallpaper.height;
                     int scale = 1;
                     while (2*scale <= actualScale) {
@@ -738,6 +737,7 @@ public class WallpaperManagerService extends IWallpaperManager.Stub
                     if (destWidth > GLHelper.getMaxTextureSize()) {
                         int newHeight = (int) (wallpaper.height / hRatio);
                         int newWidth = (int) (wallpaper.width / hRatio);
+
                         if (DEBUG) {
                             Slog.v(TAG, "Invalid crop dimensions, trying to adjust.");
                         }
@@ -749,25 +749,26 @@ public class WallpaperManagerService extends IWallpaperManager.Stub
                         estimateCrop.bottom = estimateCrop.top + newHeight;
                         cropHint.set(estimateCrop);
                         estimateCrop.scale(1f / options.inSampleSize);
+                    }
 
-                        // We've got the safe cropHint; now we want to scale it properly to
-                        // the desired rectangle.
-                        // That's a height-biased operation: make it fit the hinted height.
-                        final int safeHeight = (int) (estimateCrop.height() * hRatio);
-                        final int safeWidth = (int) (estimateCrop.width() * hRatio);
+                    // We've got the safe cropHint; now we want to scale it properly to
+                    // the desired rectangle.
+                    // That's a height-biased operation: make it fit the hinted height.
+                    final int safeHeight = (int) (estimateCrop.height() * hRatio);
+                    final int safeWidth = (int) (estimateCrop.width() * hRatio);
 
-                        if (DEBUG) {
-                            Slog.v(TAG, "Decode parameters:");
-                            Slog.v(TAG, "  cropHint=" + cropHint + ", estimateCrop=" + estimateCrop);
-                            Slog.v(TAG, "  down sampling=" + options.inSampleSize
-                                    + ", hRatio=" + hRatio);
-                            Slog.v(TAG, "  dest=" + destWidth + "x" + destHeight);
-                            Slog.v(TAG, "  safe=" + safeWidth + "x" + safeHeight);
-                            Slog.v(TAG, "  maxTextureSize=" + GLHelper.getMaxTextureSize());
-                        }
+                    if (DEBUG) {
+                        Slog.v(TAG, "Decode parameters:");
+                        Slog.v(TAG, "  cropHint=" + cropHint + ", estimateCrop=" + estimateCrop);
+                        Slog.v(TAG, "  down sampling=" + options.inSampleSize
+                                + ", hRatio=" + hRatio);
+                        Slog.v(TAG, "  dest=" + destWidth + "x" + destHeight);
+                        Slog.v(TAG, "  safe=" + safeWidth + "x" + safeHeight);
+                        Slog.v(TAG, "  maxTextureSize=" + GLHelper.getMaxTextureSize());
+                    }
 
-                        Bitmap cropped = decoder.decodeRegion(cropHint, options);
-                        decoder.recycle();
+                    Bitmap cropped = decoder.decodeRegion(cropHint, options);
+                    decoder.recycle();
 
                     if (cropped == null) {
                         Slog.e(TAG, "Could not decode new wallpaper");
