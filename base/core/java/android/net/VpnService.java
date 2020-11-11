@@ -35,6 +35,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
+import android.os.SystemProperties;
 
 import com.android.internal.net.VpnConfig;
 
