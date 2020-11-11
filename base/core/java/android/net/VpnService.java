@@ -196,7 +196,7 @@ public class VpnService extends Service {
         //Micronet: Updated method to bypass user consent for VPN (LM request)
         // If the user is running the application on a SmartCam, bypass the permission.
         // The implementation is similar to the prepareAndAuthorize()
-        if(shouldAvoidPermissions){
+        if(shouldAvoidPermissions()){
             IConnectivityManager cm = getService();
                 String packageName = context.getPackageName();
                 try {
