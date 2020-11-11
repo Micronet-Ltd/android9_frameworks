@@ -833,7 +833,7 @@ public class VpnService extends Service {
         }
     }
     //Micronet: Including a method to identify the difference between SC and ST8
-    private boolean shouldAvoidPermissions(){
+    private static boolean shouldAvoidPermissions(){
         String boardType = SystemProperties.get("persist.vendor.board.config", "");
         return (boardType.equals("smartcam"));
     }
