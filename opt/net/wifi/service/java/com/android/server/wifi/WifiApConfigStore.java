@@ -352,7 +352,7 @@ public class WifiApConfigStore {
         WifiConfiguration config = new WifiConfiguration();
         config.apBand = WifiConfiguration.AP_BAND_2GHZ;
         config.SSID = mContext.getResources().getString(
-                R.string.wifi_tether_configure_ssid_default) ;//+ "-" + getRandomIntForDefaultSsid();
+                R.string.wifi_tether_configure_ssid_default) + "_" + getRandomIntForDefaultSsid();
         config.allowedKeyManagement.set(KeyMgmt.WPA2_PSK);
         String randomUUID = UUID.randomUUID().toString();
         //first 12 chars from xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx

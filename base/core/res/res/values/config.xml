@@ -2042,7 +2042,7 @@
     <bool name="config_actionMenuItemAllCaps">true</bool>
 
     <!-- Remote server that can provide NTP responses. -->
-    <string translatable="false" name="config_ntpServer">2.android.pool.ntp.org</string>
+    <string translatable="false" name="config_ntpServer">time.android.com</string>
     <!-- Normal polling frequency in milliseconds -->
     <integer name="config_ntpPollingInterval">86400000</integer>
     <!-- Try-again polling interval in milliseconds, in case the network request failed -->
@@ -3224,7 +3224,7 @@
 
     <!-- Flag indicating whether the assist disclosure can be disabled using
          ASSIST_DISCLOSURE_ENABLED. -->
-    <bool name="config_allowDisablingAssistDisclosure">true</bool>
+    <bool name="config_allowDisablingAssistDisclosure">false</bool>
 
     <!-- True if the device supports system navigation keys. -->
     <bool name="config_supportSystemNavigationKeys">false</bool>
@@ -3553,6 +3553,6 @@
     <string name="config_misprovisionedBrandValue" translatable="false"></string>
 
     <!-- Component name for default assistant on this device -->
-    <string name="config_defaultAssistantComponentName">com.google.android.googlequicksearchbox/com.google.android.voiceinteraction.GsaVoiceInteractionService</string>
+    <string name="config_defaultAssistantComponentName"></string>
 
 </resources>

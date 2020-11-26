@@ -44,8 +44,8 @@
 static int CAN1_TTY_NUMBER= 1;
 static int CAN2_TTY_NUMBER= 2;
 
-static int fd_CAN1;
-static int fd_CAN2;
+static int fd_CAN1 = -1;
+static int fd_CAN2 = -1;
 
 struct FLEXCAN_Flow_Control{
     __u32 search_id;
@@ -97,48 +97,51 @@ int serial_set_nonblocking(int fd){
     int flags;
 
     if(-1 == (flags = fcntl(fd, F_GETFL))) {
-        ALOGE("%s:%d fnctl: %s\n", __FILE__, __LINE__, strerror(errno));
+        ALOGE("CAN jni: %s:%d fnctl: %s\n", __FILE__, __LINE__, strerror(errno));
         return -1;
     }
 
     if(-1 == fcntl(fd, F_SETFL, flags | O_NONBLOCK))
     {
-        ALOGE("%s:%d: fcntl: %s\n", __FILE__, __LINE__, strerror(errno));
+        ALOGE("CAN jni: %s:%d: fcntl: %s\n", __FILE__, __LINE__, strerror(errno));
         return -1;
     }
     return 0;
 }
 
 int serial_init(char *portName){
-    ALOGD("opening port: '%s'\n", portName);
-
-    //Initialising CAN1_TTY
-    if(strcmp(portName, CAN1_TTY)==0){
-        if ((fd_CAN1 = open(portName, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
-            perror(portName);
-			ALOGE("failed to open %s, error: %s", portName, strerror(errno));
-            return -1;
-        }
+    // Open corresponding ttyCANx
+    //
+    if (0 == strcmp(portName, CAN1_TTY)) {
+        if (-1 == fd_CAN1) {
+            if ((fd_CAN1 = open(portName, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
+                fd_CAN1 = -1;
+                perror(portName);
+                ALOGE("CAN jni: failed to open %s, error: %s", portName, strerror(errno));
+                return -1;
+            }
             serial_set_nonblocking(fd_CAN1);
-            ALOGD("opened port: '%s', fd=%d", CAN1_TTY, fd_CAN1);
+            ALOGD("CAN jni: opened port: '%s', fd=%d", CAN1_TTY, fd_CAN1);
             initTerminalInterface(fd_CAN1, B115200, 1);
-            return fd_CAN1;
         }
 
-        //Initialising CAN2_TTY
-    else if(strcmp(portName,CAN2_TTY)== 0){
-        if ((fd_CAN2 = open(portName, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
-            perror(portName);
-			ALOGE("failed to open %s, error: %s", portName, strerror(errno));
-            return -1;
-        }
+        return fd_CAN1;
+    } else if (0 == strcmp(portName,CAN2_TTY)) {
+        if (-1 == fd_CAN2) {
+            if ((fd_CAN2 = open(portName, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
+                fd_CAN2 = -1;
+                perror(portName);
+    			ALOGE("CAN jni: failed to open %s, error: %s", portName, strerror(errno));
+                return -1;
+            }
             serial_set_nonblocking(fd_CAN2);
-            ALOGD("opened port: '%s', fd=%d", CAN2_TTY, fd_CAN2);
+            ALOGD("CAN jni: opened port: '%s', fd=%d", CAN2_TTY, fd_CAN2);
             initTerminalInterface(fd_CAN2, B115200,1);
+        }
         return fd_CAN2;
     }
-    
-    else return -1;
+
+    return -1;
 }
 
 int initTerminalInterface(int fd, speed_t interfaceBaud, uint8_t readMinChar) {
@@ -147,35 +150,44 @@ int initTerminalInterface(int fd, speed_t interfaceBaud, uint8_t readMinChar) {
     } else {
         ALOGD("The port that is being init is not a ttyport");
     }
-        struct termios ios;
+    struct termios ios;
 
-        tcgetattr(fd, &ios);
-        bzero(&ios, sizeof(ios));
+    tcgetattr(fd, &ios);
+    bzero(&ios, sizeof(ios));
 
-        cfmakeraw(&ios);
-        cfsetospeed(&ios, interfaceBaud);
-        cfsetispeed(&ios, interfaceBaud);
-        ios.c_cflag = (interfaceBaud | CS8 | CLOCAL | CREAD) & ~(CRTSCTS | CSTOPB | PARENB);
-        ios.c_iflag = 0;
-        ios.c_oflag = 0;
-        ios.c_lflag = 0;        /* disable ECHO, ICANON, etc... */
-        ios.c_cc[VTIME] = 10;   /* unit: 1/10 second. */
-        ios.c_cc[VMIN] = readMinChar;     /* minimal characters for reading */
+    cfmakeraw(&ios);
+    cfsetospeed(&ios, interfaceBaud);
+    cfsetispeed(&ios, interfaceBaud);
+    ios.c_cflag = (interfaceBaud | CS8 | CLOCAL | CREAD) & ~(CRTSCTS | CSTOPB | PARENB);
+    ios.c_iflag = 0;
+    ios.c_oflag = 0;
+    ios.c_lflag = 0;        /* disable ECHO, ICANON, etc... */
+    ios.c_cc[VTIME] = 10;   /* unit: 1/10 second. */
+    ios.c_cc[VMIN] = readMinChar;     /* minimal characters for reading */
 
-        tcsetattr(fd, TCSANOW, &ios);
-        tcflush(fd, TCIOFLUSH);
+    tcsetattr(fd, TCSANOW, &ios);
+    tcflush(fd, TCIOFLUSH);
+
     return 0;
-    }
+}
 
 int closeCAN(int close_fd) {
     // first always close the CAN module (bug #250)
     // http://192.168.1.234/redmine/issues/250
+    // Vladimir:
+    // TODO: the command format depend on previous open
+    // Should be fixed
+    //
     char buf[256];
     sprintf(buf, "C\r");
     if (-1 == write(close_fd, buf, strlen(buf))) {
-        ALOGE("Error write %s command\n", buf);
-		close(close_fd);
-        return -1;
+        ALOGE("CAN jni: write %s command failed\n", buf);
+    }
+    close(close_fd);
+    if (fd_CAN1 == close_fd) {
+        fd_CAN1 =-1;
+    } else {
+        fd_CAN2 =-1;
     }
     ALOGD("Closed CAN channel ");
     return 0;
@@ -185,11 +197,10 @@ int closeCAN(int close_fd) {
  * Returns the file descriptor associated with the tty port
  **/
 int getFd(int portNumber){
-    if(portNumber == CAN1_TTY_NUMBER){
-            return fd_CAN1;
-    }
-    else if(portNumber == CAN2_TTY_NUMBER){
-            return fd_CAN2;
+    if (portNumber == CAN1_TTY_NUMBER) {
+        return fd_CAN1;
+    } else if (portNumber == CAN2_TTY_NUMBER) {
+        return fd_CAN2;
     }
     else return -1; 
 }
@@ -203,7 +214,8 @@ int sendMessage(int fd_port, const char * message) {
     sprintf(buf, "%s", message);
     printf("Send %s\n", buf);
     if (-1 == write(fd_port, buf, strlen(buf))) {
-        ALOGE("Error: %s command coudln't be written! \n", buf );
+        ALOGE("CAN jni: %s command coudln't be written! \n", buf );
+        closeCAN(fd_port);
         return -1;
     }
     return 0;
@@ -316,12 +328,14 @@ void setFlowControlMessage(char type,char *searchID,char *responseID, int dataLe
     }
 
         //Check for valid extended and standard flow command based on its length
-    if((flowControlMessage[1]=='F' &&  flowControlMessage[extendedMessageLength-1]==CAN_OK_RESPONSE) || (flowControlMessage[1]=='f' &&  flowControlMessage[standardMessageLength-1]==CAN_OK_RESPONSE)){
-            if (-1 == sendMessage(port_fd, flowControlMessage)) {
-                ALOGE("!!!!Error configuring flow message: %s for Flow code: !!!!", searchID);
-            }
+    if((flowControlMessage[1]=='F' &&  flowControlMessage[extendedMessageLength-1]==CAN_OK_RESPONSE) ||
+       (flowControlMessage[1]=='f' &&  flowControlMessage[standardMessageLength-1]==CAN_OK_RESPONSE)){
+        if (-1 == sendMessage(port_fd, flowControlMessage)) {
+            ALOGE("CAN jni: !!!!Error configuring flow message: %s for Flow code: !!!!", searchID);
+        }
         ALOGD("Flow message SET: %s", flowControlMessage);
-    } else ALOGE("Error: Flow control command coundn't be sent! Message: %s, Extended Message size=%d or StandardMessageSize=%d", flowControlMessage, extendedMessageLength,standardMessageLength);
+    } else
+        ALOGE("CAN jni: Flow control command coundn't be sent! Message: %s, Extended Message size=%d or StandardMessageSize=%d", flowControlMessage, extendedMessageLength,standardMessageLength);
 }
 
 /**
@@ -458,7 +472,8 @@ int setBitrate(int fd, int speed) {
     char buf[256];
     sprintf(buf, "S%d\r", baud);
     if (-1 == write(fd, buf, strlen(buf))) {
-        ALOGE("Error: Write Failed! Command - %s \n", buf);
+        ALOGE("CAN jni: Write Failed! Command - %s \n", buf);
+        //closeCAN(fd);
         return -1;
     }
     return 0;
@@ -470,10 +485,10 @@ int openCANandSetTerm(int fd, bool term) {
     char buf[256];
     sprintf(buf, "O%d\r", termination);
     if (-1 == write(fd, buf, strlen(buf))) {
-        ALOGE("Error: Write Failed! Command - %s \n", buf);
+        ALOGE("CAN jni: Write Failed! Command - %s \n", buf);
         return -1;
     }
-    ALOGD("Opened CAN channel with termination set to = %d ",termination);
+    ALOGD("CAN jni: Opened CAN channel with termination set to = %d ",termination);
     return 0;
 }
 
@@ -482,7 +497,7 @@ int setListeningModeandTerm(int fd, bool term) {
     char buf[256];
     sprintf(buf, "L%d\r", termination);
     if (-1 == write(fd, buf, strlen(buf))) {
-        ALOGE("Error: Couldn't Open Channel in Listening Mode: Write Failed! Command - %s \n", buf);
+        ALOGE("CAN jni: Couldn't Open Channel in Listening Mode: Write Failed! Command - %s \n", buf);
         return -1;
     }
     return 0;
@@ -492,7 +507,8 @@ int sendReadStatusCommand(int fd) {
     char buf[256];
     sprintf(buf, "F\r");
     if (-1 == write(fd, buf, strlen(buf))) {
-        ALOGE("Error: Read Status Flag Config Failed: Write Failed! Command - %s \n", buf);
+        ALOGE("CAN jni: Read Status Flag Config Failed: Write Failed! Command - %s \n", buf);
+        closeCAN(fd);
         return -1;
     }
     return 0;
@@ -503,17 +519,18 @@ int serial_send_data(BYTE *mydata, DWORD bytes_to_write, int fd) {
     if(fd != -1){
         numwr = write(fd, mydata, bytes_to_write);
         if(numwr == bytes_to_write){
-            ALOGD("Frame sent sucessfully! Number of bytes=%d, frame=%s, fd=%d",bytes_to_write, mydata,fd);
+            ALOGD("CAN jni: Frame sent sucessfully! Number of bytes=%d, frame=%s, fd=%d",bytes_to_write, mydata,fd);
             return 0;
         } else{
             //TODO: this may not be an error
-            ALOGD("Alert - Frame sent to port! but the number of bytes written were not equal to what it should have written. numwr=%d, bytes_to_write=%d", numwr, bytes_to_write);
+            ALOGD("CAN jni: Alert - Frame sent to port! but the number of bytes written were not equal to what it should have written. numwr=%d, bytes_to_write=%d", numwr, bytes_to_write);
             //LOGD("Check me! Number of bytes=%d, frame=%s, fd=%d",bytes_to_write, mydata,fd);
             return 0;
         }
     }
     else {
-        ALOGE("Alert - FileDescriptor = %d!", fd);
+        ALOGE("CAN jni: Alert - FileDescriptor = %d!", fd);
+        closeCAN(fd);
         return -1 ;
     }
 }
@@ -548,9 +565,24 @@ int can_config_and_open(bool listeningModeEnable, int bitrate, int termination, 
     * First always close1939Port the CAN module (bug #250)
     * http://192.168.1.234/redmine/issues/250/
     */
-    if (closeCAN(fd) == -1) {
-        return -1;
-    }
+    // Vladimir:
+    // Such stupid, two days debugging. Close interface should destruct as CAN as file handle but here requiers CAN only
+    // 
+    #if 0
+        if (closeCAN(fd) == -1) {
+            return -1;
+        }
+    #else
+        // Vladimir:
+        // TODO: the command format depend on previous open
+        // Should be fixed
+        //
+        char buf[8];
+        sprintf(buf, "C\r");
+        if (-1 == write(fd, buf, strlen(buf))) {
+            ALOGE("CAN jni: write %s command failed\n", buf);
+        }
+    #endif
 
     /**
      * The firmware has a 100ms delay after closing the port.
@@ -568,7 +600,7 @@ int can_config_and_open(bool listeningModeEnable, int bitrate, int termination, 
     /**
      * Configuring Filter List
      */
-        setFilterAndMasks(filter_array, numfilter,fd);
+    setFilterAndMasks(filter_array, numfilter,fd);
 
     /**
      * The firmware has a 25ms delay between configuring filters and flow control codes
@@ -590,8 +622,7 @@ int can_config_and_open(bool listeningModeEnable, int bitrate, int termination, 
         if(setListeningModeandTerm(fd, termination) == -1){
             return -1;
         }
-    }
-    else {
+    } else {
         if(openCANandSetTerm(fd, termination) == -1){
             return -1;
         }
@@ -641,7 +672,7 @@ int32_t ParseCanMessToString(int msg_type, int id, int data_len, BYTE * data, ui
     uint8_t tmp1, ind, *pmsg_str, curr_msg_len = 0;
 
     if (NULL == data || NULL == pDestBuff) {
-        ALOGD("%s: Error wrong params\n", __func__);
+        ALOGD("CAN jni: %s: Error wrong params\n", __func__);
         return -1;
     }
 
@@ -675,8 +706,7 @@ int32_t ParseCanMessToString(int msg_type, int id, int data_len, BYTE * data, ui
         sprintf ( (char*)pmsg_str, "%08x", id);
         pmsg_str += 8;
         curr_msg_len += 8;
-    }
-    else if ((msg_type == STANDARD) || (msg_type == STANDARD_REMOTE)){
+    } else if ((msg_type == STANDARD) || (msg_type == STANDARD_REMOTE)){
         // Standard / Standard Remote Identifier
         sprintf ( (char*)pmsg_str, "%03x", id);
         pmsg_str += 3;
@@ -731,7 +761,7 @@ void FlexCAN_send_can_packet(BYTE type, DWORD id, int data_len, BYTE *data, int 
     msgLength = ParseCanMessToString(type, id, data_len, data, canPacketToTx);
 
     if( serial_send_data(canPacketToTx, msgLength, fd) < 0){
-        ALOGE("!!!!!!!!!!!!!!! Couldn't send FLEXCAN CAN message !!!!!!!!!!!!!!!!!");
+        ALOGE("CAN jni: !!!!!!!!!!!!!!! Couldn't send FLEXCAN CAN message !!!!!!!!!!!!!!!!!");
         return;
     }
 }
@@ -796,7 +826,7 @@ void setFilterAndMasks(FLEXCAN_filter_mask *filter_array, int numfilter, int por
 
         tmp_filter = *filter_array;
 
-        for(uint8_t index=0; index < tmp_filter.filter_count; index++){
+        for (uint8_t index=0; index < tmp_filter.filter_count; index++) {
 
             filterMaskType = tmp_filter.filter_mask_type[index];
             filterMaskTypeChar = getCharType(filterMaskType);
@@ -843,7 +873,7 @@ void configureFlowControl( struct FLEXCAN_Flow_Control *configuration_array, int
     BYTE dataBytes[8]={0,0,0,0,0,0,0,0};
 
     for(count = 0; count < numFlowCodes; count++ ){
-        ALOGD("configureFlowControl: count=%d, numFlowCodes=%d, messageType=%d", count,  numFlowCodes, configuration_array[count].flow_msg_type);
+        ALOGD("CAN jni: configureFlowControl: count=%d, numFlowCodes=%d, messageType=%d", count,  numFlowCodes, configuration_array[count].flow_msg_type);
         flowMessageTypeChar = getCharType(configuration_array[count].flow_msg_type);
 
         if(flowMessageTypeChar=='T'){

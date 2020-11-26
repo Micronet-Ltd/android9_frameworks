@@ -390,7 +390,7 @@ public class SliceManagerService extends ISliceManager.Stub {
     }
 
     protected int checkAccess(String pkg, Uri uri, int uid, int pid) {
-        return checkSlicePermission(uri, pkg, pid, uid, null);
+        return checkSlicePermission(uri, pkg, uid, pid, null);
     }
 
     private String getProviderPkg(Uri uri, int user) {

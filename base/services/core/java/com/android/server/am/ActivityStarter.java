@@ -285,8 +285,6 @@ class ActivityStarter {
      * execution.
      */
     private static class Request {
-	static final int DEFAULT_REAL_CALLING_PID = 0;
-	static final int DEFAULT_REAL_CALLING_UID = UserHandle.USER_NULL;
         private static final int DEFAULT_CALLING_UID = -1;
         private static final int DEFAULT_CALLING_PID = 0;
 
@@ -301,11 +299,11 @@ class ActivityStarter {
         IBinder resultTo;
         String resultWho;
         int requestCode;
-	int callingPid = DEFAULT_CALLING_PID;
-	int callingUid = DEFAULT_CALLING_UID;
+        int callingPid = DEFAULT_CALLING_UID;
+        int callingUid = DEFAULT_CALLING_PID;
         String callingPackage;
-	int realCallingPid = Request.DEFAULT_REAL_CALLING_PID;
-	int realCallingUid = Request.DEFAULT_REAL_CALLING_UID;        
+        int realCallingPid;
+        int realCallingUid;
         int startFlags;
         SafeActivityOptions activityOptions;
         boolean ignoreTargetSecurity;
@@ -359,8 +357,8 @@ class ActivityStarter {
             callingPid = DEFAULT_CALLING_PID;
             callingUid = DEFAULT_CALLING_UID;
             callingPackage = null;
-            realCallingPid = Request.DEFAULT_REAL_CALLING_PID;
-            realCallingUid = Request.DEFAULT_REAL_CALLING_UID;
+            realCallingPid = 0;
+            realCallingUid = 0;
             startFlags = 0;
             activityOptions = null;
             ignoreTargetSecurity = false;
@@ -375,7 +373,7 @@ class ActivityStarter {
             mayWait = false;
             avoidMoveToFront = false;
             allowPendingRemoteAnimationRegistryLookup = true;
-            filterCallingUid = DEFAULT_REAL_CALLING_UID;
+            filterCallingUid = UserHandle.USER_NULL;
             originatingPendingIntent = null;
         }
 
@@ -494,8 +492,7 @@ class ActivityStarter {
             // for transactional diffs and preprocessing.
             if (mRequest.mayWait) {
                 return startActivityMayWait(mRequest.caller, mRequest.callingUid,
-			mRequest.callingPackage,mRequest.realCallingPid, mRequest.realCallingUid,
-			mRequest.intent, mRequest.resolvedType,
+                        mRequest.callingPackage, mRequest.intent, mRequest.resolvedType,
                         mRequest.voiceSession, mRequest.voiceInteractor, mRequest.resultTo,
                         mRequest.resultWho, mRequest.requestCode, mRequest.startFlags,
                         mRequest.profilerInfo, mRequest.waitResult, mRequest.globalConfig,
@@ -1006,8 +1003,7 @@ class ActivityStarter {
     }
 
     private int startActivityMayWait(IApplicationThread caller, int callingUid,
-	    String callingPackage, int requestRealCallingPid, int requestRealCallingUid,
-	    Intent intent, String resolvedType,
+            String callingPackage, Intent intent, String resolvedType,
             IVoiceInteractionSession voiceSession, IVoiceInteractor voiceInteractor,
             IBinder resultTo, String resultWho, int requestCode, int startFlags,
             ProfilerInfo profilerInfo, WaitResult outResult,
@@ -1021,12 +1017,9 @@ class ActivityStarter {
         }
         mSupervisor.getActivityMetricsLogger().notifyActivityLaunching();
         boolean componentSpecified = intent.getComponent() != null;
-	final int realCallingPid = requestRealCallingPid != Request.DEFAULT_REAL_CALLING_PID
-		? requestRealCallingPid
-		: Binder.getCallingPid();
-	final int realCallingUid = requestRealCallingUid != Request.DEFAULT_REAL_CALLING_UID
-		? requestRealCallingUid
-		 : Binder.getCallingUid();
+
+        final int realCallingPid = Binder.getCallingPid();
+        final int realCallingUid = Binder.getCallingUid();
 
         int callingPid;
         if (callingUid >= 0) {
@@ -1253,7 +1246,7 @@ class ActivityStarter {
      */
     static int computeResolveFilterUid(int customCallingUid, int actualCallingUid,
             int filterCallingUid) {
-        return filterCallingUid != Request.DEFAULT_REAL_CALLING_UID
+        return filterCallingUid != UserHandle.USER_NULL
                 ? filterCallingUid
                 : (customCallingUid >= 0 ? customCallingUid : actualCallingUid);
     }

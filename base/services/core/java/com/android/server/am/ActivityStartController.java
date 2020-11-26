@@ -284,13 +284,8 @@ public class ActivityStartController {
      *        null if not originated by PendingIntent
      */
     final int startActivitiesInPackage(int uid, String callingPackage, Intent[] intents,
-           String[] resolvedTypes, IBinder resultTo, SafeActivityOptions options, int userId,boolean validateIncomingUser,PendingIntentRecord originatingPendingIntent) {
-           return startActivitiesInPackage(uid, 0, UserHandle.USER_NULL,
-           callingPackage, intents, resolvedTypes, resultTo, options, userId,
-           validateIncomingUser,originatingPendingIntent);
-        }
-
-    final int startActivitiesInPackage(int uid, int realCallingPid, int realCallingUid,String callingPackage, Intent[] intents,String[] resolvedTypes, IBinder resultTo, SafeActivityOptions options, int userId,boolean validateIncomingUser, PendingIntentRecord originatingPendingIntent) {
+            String[] resolvedTypes, IBinder resultTo, SafeActivityOptions options, int userId,
+            boolean validateIncomingUser, PendingIntentRecord originatingPendingIntent) {
 
         final String reason = "startActivityInPackage";
 
@@ -298,10 +293,13 @@ public class ActivityStartController {
                 Binder.getCallingUid(), reason);
 
         // TODO: Switch to user app stacks here.
-	        return startActivities(null, uid, realCallingPid, realCallingUid,callingPackage, intents, resolvedTypes, resultTo, options,userId, reason, originatingPendingIntent);
+        return startActivities(null, uid, callingPackage, intents, resolvedTypes, resultTo, options,
+                userId, reason, originatingPendingIntent);
     }
 
-    int startActivities(IApplicationThread caller, int callingUid, int incomingRealCallingPid, int incomingRealCallingUid,String callingPackage,Intent[] intents, String[] resolvedTypes, IBinder resultTo, SafeActivityOptions options,int userId, String reason, PendingIntentRecord originatingPendingIntent) {
+    int startActivities(IApplicationThread caller, int callingUid, String callingPackage,
+            Intent[] intents, String[] resolvedTypes, IBinder resultTo, SafeActivityOptions options,
+            int userId, String reason, PendingIntentRecord originatingPendingIntent) {
         if (intents == null) {
             throw new NullPointerException("intents is null");
         }
@@ -312,12 +310,9 @@ public class ActivityStartController {
             throw new IllegalArgumentException("intents are length different than resolvedTypes");
         }
 
-	final int realCallingPid = incomingRealCallingPid != 0
-                                   ? incomingRealCallingPid
-                                   : Binder.getCallingPid();
-        final int realCallingUid = incomingRealCallingUid != UserHandle.USER_NULL
-                                   ? incomingRealCallingUid
-                                   : Binder.getCallingUid();
+        final int realCallingPid = Binder.getCallingPid();
+        final int realCallingUid = Binder.getCallingUid();
+
         int callingPid;
         if (callingUid >= 0) {
             callingPid = -1;

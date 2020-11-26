@@ -260,7 +260,6 @@ public class TextLine {
             if (runLimit > mLen) {
                 runLimit = mLen;
             }
-            if (runStart > mLen) break;
             boolean runIsRtl = (runs[i+1] & Layout.RUN_RTL_FLAG) != 0;
 
             int segstart = runStart;
@@ -339,7 +338,6 @@ public class TextLine {
             if (runLimit > mLen) {
                 runLimit = mLen;
             }
-            if (runStart > mLen) break;
             boolean runIsRtl = (runs[i+1] & Layout.RUN_RTL_FLAG) != 0;
 
             int segstart = runStart;
@@ -429,7 +427,6 @@ public class TextLine {
             if (runLimit > mLen) {
                 runLimit = mLen;
             }
-            if (runStart > mLen) break;
             boolean runIsRtl = (runs[i + 1] & Layout.RUN_RTL_FLAG) != 0;
 
             int segstart = runStart;

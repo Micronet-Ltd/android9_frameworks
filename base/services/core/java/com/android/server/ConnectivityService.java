@@ -2355,8 +2355,9 @@ public class ConnectivityService extends IConnectivityManager.Stub
         }
     }
 
-    private boolean networkRequiresPrivateDnsValidation(NetworkAgentInfo nai) {
-        return nai.networkMonitor.isPrivateDnsValidationRequired();
+    private boolean networkRequiresValidation(NetworkAgentInfo nai) {
+        return NetworkMonitor.isValidationRequired(
+                mDefaultRequest.networkCapabilities, nai.networkCapabilities);
     }
 
     private void handleFreshlyValidatedNetwork(NetworkAgentInfo nai) {
@@ -2374,14 +2375,16 @@ public class ConnectivityService extends IConnectivityManager.Stub
 
         for (NetworkAgentInfo nai : mNetworkAgentInfos.values()) {
             handlePerNetworkPrivateDnsConfig(nai, cfg);
-            if (networkRequiresPrivateDnsValidation(nai)) {
+            if (networkRequiresValidation(nai)) {
                 handleUpdateLinkProperties(nai, new LinkProperties(nai.linkProperties));
             }
         }
     }
 
     private void handlePerNetworkPrivateDnsConfig(NetworkAgentInfo nai, PrivateDnsConfig cfg) {
-        if (!networkRequiresPrivateDnsValidation(nai)) return;
+        // Private DNS only ever applies to networks that might provide
+        // Internet access and therefore also require validation.
+        if (!networkRequiresValidation(nai)) return;
 
         // Notify the NetworkMonitor thread in case it needs to cancel or
         // schedule DNS resolutions. If a DNS resolution is required the

@@ -298,9 +298,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-import android.app.ActivityManagerNative;
-import android.app.ActivityManager.StackId;
-
 /**
  * WindowManagerPolicy implementation for the Android phone UI.  This
  * introduces a new method suffix, Lp, for an internal lock of the
@@ -426,7 +423,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private static final String SYSUI_SCREENSHOT_ERROR_RECEIVER =
             "com.android.systemui.screenshot.ScreenshotServiceErrorReceiver";
 
-	private static final String  FACTORY_TEST = "sys.factorykit.full_screen";
     /**
      * Keyguard stuff
      */
@@ -816,8 +812,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     int mSeascapeRotation = 0;   // "other" landscape rotation, 180 degrees from mLandscapeRotation
     int mPortraitRotation = 0;   // default portrait rotation
     int mUpsideDownRotation = 0; // "other" portrait rotation
-    //Panel Orientation default portrait
-    int mPanelOrientation = Surface.ROTATION_0;
+
     // What we do when the user long presses on home
     private int mLongPressOnHomeBehavior;
 
@@ -2309,11 +2304,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 new SystemGesturesPointerEventListener.Callbacks() {
                     @Override
                     public void onSwipeFromTop() {
-						if(SystemProperties.getBoolean(FACTORY_TEST,false)){
-							Log.e(TAG,"in factory test,ignore swipe from top");
-							return;
-						}
-
                         if (mStatusBar != null) {
                             requestTransientBars(mStatusBar);
                         }
@@ -2535,7 +2525,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             return;
         }
         mDisplay = display;
-        mPanelOrientation = SystemProperties.getInt("persist.panel.orientation",0)/90;
 
         final Resources res = mContext.getResources();
         int shortSize, longSize;
@@ -2998,8 +2987,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     attrs.hideTimeoutMilliseconds = TOAST_WINDOW_TIMEOUT;
                 }
                 attrs.windowAnimations = com.android.internal.R.style.Animation_Toast;
-                // Toasts can't be clickable
-                attrs.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
                 break;
         }
 
@@ -4287,38 +4274,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
         // Let the application handle the key.
         return 0;
-    }
-    private boolean mStopLockTaskModeBackKeyTriggered;
-    private boolean mStopLockTaskModeMenuKeyTriggered;
-    private long mStopLockTaskModeMenuKeyTime;
-    private long mStopLockTaskModeBackKeyTime; 
-    private void interceptStopLockTaskMode(){
-        //if(mStopLockTaskModeMenuKeyTriggered && mStopLockTaskModeBackKeyTriggered){
-        if(mStopLockTaskModeBackKeyTriggered){
-            final long now = SystemClock.uptimeMillis();
-
-                cancelPendingStopLockTaskModeAction();
-                mHandler.postDelayed(mStopLockTaskModeRunnable,getScreenshotChordLongPressDelay());
-        }
-    }
-        private void cancelPendingStopLockTaskModeAction(){
-        mHandler.removeCallbacks(mStopLockTaskModeRunnable);
-    }
-            private final Runnable mStopLockTaskModeRunnable = new Runnable(){
-        @Override
-        public void run(){
-            stopLockTaskMode();
-        }
-    }; 
-        private void stopLockTaskMode(){
-        try{
-            android.app.IActivityManager activityManager = ActivityManagerNative.getDefault();
-            if(activityManager.isInLockTaskMode()) {
-                activityManager.stopSystemLockTaskMode();
-            }
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -6350,16 +6305,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
         // Handle special keys.
         switch (keyCode) {
-            case KeyEvent.KEYCODE_MENU:
-                break;
             case KeyEvent.KEYCODE_BACK: {
                 if (down) {
                     interceptBackKeyDown();
-                        if(interactive && !mStopLockTaskModeBackKeyTriggered && (event.getFlags() &KeyEvent.FLAG_FALLBACK) == 0){
-                            mStopLockTaskModeBackKeyTriggered = true;	
-                            mStopLockTaskModeBackKeyTime = event.getDownTime();
-                            interceptStopLockTaskMode();
-                        }
                 } else {
                     boolean handled = interceptBackKeyUp(event);
 
@@ -6367,23 +6315,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     if (handled) {
                         result &= ~ACTION_PASS_TO_USER;
                     }
-                        mStopLockTaskModeBackKeyTriggered = false;
-                        cancelPendingStopLockTaskModeAction();
                 }
                 break;
             }
-            case KeyEvent.KEYCODE_APP_SWITCH:
-                if(down){
-                    if(interactive && !mStopLockTaskModeMenuKeyTriggered && (event.getFlags() & KeyEvent.FLAG_FALLBACK) == 0){
-                        mStopLockTaskModeMenuKeyTriggered = true;
-                        mStopLockTaskModeMenuKeyTime = event.getDownTime();
-                        interceptStopLockTaskMode();
-                    }
-                }else{
-                    mStopLockTaskModeMenuKeyTriggered = false;
-                    cancelPendingStopLockTaskModeAction();
-                }
-                break;
 
             case KeyEvent.KEYCODE_VOLUME_DOWN:
             case KeyEvent.KEYCODE_VOLUME_UP:
@@ -7646,7 +7580,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     mAllowAllRotations = mContext.getResources().getBoolean(
                             com.android.internal.R.bool.config_allowAllRotations) ? 1 : 0;
                 }
-                if (sensorRotation != mUpsideDownRotation
+                if (sensorRotation != Surface.ROTATION_180
                         || mAllowAllRotations == 1
                         || orientation == ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
                         || orientation == ActivityInfo.SCREEN_ORIENTATION_FULL_USER) {
@@ -7724,7 +7658,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     if (preferredRotation >= 0) {
                         return preferredRotation;
                     }
-                    return mPanelOrientation;
+                    return Surface.ROTATION_0;
             }
         }
     }
